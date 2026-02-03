@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================================================================== */
+/* CRITICAL: Full-page dark base + prevents any background gaps */
+/* ================================================================== */
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  /* Use the dark color as the base background */
+  background-color: #0A0D17; 
+  color: #F9FAFB;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Extra safety: Ensure React's root elements are transparent */
+#root > div {
+  background: transparent !important;
+}
+
+/* ================================================================== */
+/* Blob breathing animation DEFINITION (Used by Tailwind) */
+/* ================================================================== */
+@keyframes blob-slow {
+  0%, 100% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(15px, -10px, 0) scale(1.05); /* Increased movement slightly */
+  }
+}
+
+.animate-blob-slow {
+  animation: blob-slow 22s ease-in-out infinite; /* Slower animation time */
+}
