@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import Groq from 'groq-sdk';
 import authMiddleware from '../middleware/auth.js';
-import PDF from '../models/PDF.js';
+import PDF from '../models/pdf.js';
 import dotenv from 'dotenv';
 import pdfParse from 'pdf-parse-fork';
 
