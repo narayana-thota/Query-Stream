@@ -1,27 +1,33 @@
-// File: backend/models/Podcast.js
+// File: backend/models/podcast.js
 import mongoose from 'mongoose';
 
 const PodcastSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Links to your User collection
+    ref: 'User',
     required: true
   },
-  filename: {
+  name: {
     type: String,
-    required: true // e.g., "History_Notes.pdf"
+    required: true
   },
-  sourceText: {
-    type: String, 
-    required: true // The text extracted from the PDF
+  transcript: {
+    type: String,
+    required: true
   },
-  generatedScript: {
-    type: String // We will also save the AI script here for history
+  audioUrl: {
+    type: String,
+    required: true
+  },
+  duration: {
+    type: String,
+    default: '2:00'
   },
   createdAt: {
     type: Date,
     default: Date.now
   }
-}, { collection: 'podcasts' }); // ⚠️ FORCE COLLECTION NAME TO 'podcasts'
+});
 
-export default mongoose.model('PodcastData', PodcastSchema);
+const PodcastData = mongoose.model('Podcast', PodcastSchema);
+export default PodcastData;

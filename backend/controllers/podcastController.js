@@ -14,7 +14,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const generateScript = async (text, tone, length) => {
     const wordCount = length === 'Short' ? 120 : length === 'Medium' ? 250 : 450;
-    const safeText = text.substring(0, 30000); 
+    const safeText = text ? text.substring(0, 30000) : ""; 
 
     const prompt = `
     You are a podcast host from India. Convert the source text into a script.
@@ -44,9 +44,8 @@ const generateScript = async (text, tone, length) => {
 export const generatePodcast = async (req, res) => {
     try {
         let { text, voice, tone, length } = req.body;
-        let pdfTextContent = ""; // To store extracted text for DB
-        let originalFilename = "Manual Entry"; // Default name if typed manually
-        let savedPodcastId = null; // To return the ID to frontend
+        let pdfTextContent = ""; 
+        let podcastName = "AI Podcast"; // Default name
 
         // --- 1. HANDLE PDF UPLOAD ---
         if (req.file) {
@@ -57,7 +56,9 @@ export const generatePodcast = async (req, res) => {
 
                 // Clean text
                 pdfTextContent = pdfData.text.replace(/\n/g, " ").replace(/\s+/g, " ");
-                originalFilename = req.file.originalname;
+                
+                // Use filename as the Podcast Name (Remove .pdf extension)
+                podcastName = req.file.originalname.replace(/\.pdf$/i, '');
 
                 // Append to text for generation
                 text = (text || '') + "\n" + pdfTextContent;
@@ -68,8 +69,8 @@ export const generatePodcast = async (req, res) => {
                 return res.status(400).json({ msg: "Failed to read PDF." });
             }
         } else if (text) {
-             // If user just typed text, we save that too
-             pdfTextContent = text;
+             // If manual text, create a name from the first few words
+             podcastName = text.split(' ').slice(0, 4).join(' ') + '...';
         }
 
         if (!text || !text.trim()) {
@@ -82,27 +83,7 @@ export const generatePodcast = async (req, res) => {
         const script = await generateScript(text, tone, length);
         console.log("📝 Script Ready.");
 
-        // --- 3. SAVE TO MONGODB (Collection: podcasts) ---
-        // We do this AFTER script generation so we can save the result too
-        if (req.user && req.user.id) {
-            try {
-                const newPodcastEntry = new PodcastData({
-                    user: req.user.id,
-                    filename: originalFilename,
-                    sourceText: pdfTextContent,  // The raw PDF data
-                    generatedScript: script      // The AI result
-                });
-                
-                const savedPodcast = await newPodcastEntry.save();
-                savedPodcastId = savedPodcast._id; // Store the MongoDB ID
-                console.log(`💾 Saved to 'podcasts' collection: ${originalFilename} (ID: ${savedPodcastId})`);
-            } catch (dbErr) {
-                console.error("Database Save Error:", dbErr);
-                // We don't stop the response if DB save fails, just log it
-            }
-        }
-
-        // --- 4. GENERATE AUDIO (Google TTS) ---
+        // --- 3. GENERATE AUDIO (Google TTS) ---
         const lang = (voice === 'Neerja' || voice === 'Prabhat') ? 'hi' : 'en';
         
         const results = await googleTTS.getAllAudioBase64(script, {
@@ -116,12 +97,33 @@ export const generatePodcast = async (req, res) => {
         const combinedBase64 = results.map(r => r.base64).join('');
         const audioUrl = `data:audio/mp3;base64,${combinedBase64}`;
 
+        // --- 4. SAVE TO MONGODB ---
+        let savedPodcastId = null;
+
+        if (req.user && req.user.id) {
+            try {
+                const newPodcastEntry = new PodcastData({
+                    user: req.user.id,
+                    name: podcastName,         // 🔧 FIXED: Saves the PDF filename here
+                    transcript: script,
+                    audioUrl: audioUrl,
+                    duration: length === 'Short' ? '< 2 mins' : length === 'Medium' ? '2-5 mins' : '5+ mins'
+                });
+                
+                const savedPodcast = await newPodcastEntry.save();
+                savedPodcastId = savedPodcast._id;
+                console.log(`💾 Saved to DB: ${podcastName} (ID: ${savedPodcastId})`);
+            } catch (dbErr) {
+                console.error("Database Save Error:", dbErr);
+            }
+        }
+
         res.json({
             success: true,
             audioUrl: audioUrl,
             transcript: script,
-            podcastId: savedPodcastId, // Return the ID so frontend can delete it
-            filename: originalFilename
+            podcastId: savedPodcastId,
+            name: podcastName
         });
 
     } catch (error) {
@@ -130,57 +132,35 @@ export const generatePodcast = async (req, res) => {
     }
 };
 
-// --- NEW: DELETE PODCAST ENTRY ---
+// --- DELETE PODCAST ENTRY ---
 export const deletePodcast = async (req, res) => {
     try {
         const { id } = req.params;
-
-        // Find and delete the podcast entry
         const podcast = await PodcastData.findById(id);
 
-        if (!podcast) {
-            return res.status(404).json({ msg: "Podcast entry not found." });
-        }
-
-        // Verify the podcast belongs to the requesting user
-        if (podcast.user.toString() !== req.user.id) {
-            return res.status(401).json({ msg: "Not authorized to delete this podcast." });
-        }
+        if (!podcast) return res.status(404).json({ msg: "Podcast entry not found." });
+        if (podcast.user.toString() !== req.user.id) return res.status(401).json({ msg: "Not authorized." });
 
         await PodcastData.findByIdAndDelete(id);
         
-        console.log(`🗑️ Deleted podcast: ${podcast.filename} (ID: ${id})`);
+        console.log(`🗑️ Deleted podcast: ${podcast.name} (ID: ${id})`);
         
-        res.json({ 
-            success: true, 
-            msg: "Podcast deleted successfully.",
-            filename: podcast.filename
-        });
+        res.json({ success: true, msg: "Podcast deleted successfully.", id: id });
 
     } catch (error) {
         console.error("Delete Error:", error.message);
-        
-        if (error.kind === 'ObjectId') {
-            return res.status(404).json({ msg: "Invalid podcast ID." });
-        }
-        
         res.status(500).json({ msg: "Server Error" });
     }
 };
 
-// --- NEW: GET ALL USER'S PODCASTS ---
+// --- GET USER PODCASTS ---
 export const getUserPodcasts = async (req, res) => {
     try {
         const podcasts = await PodcastData.find({ user: req.user.id })
-            .sort({ createdAt: -1 }) // Most recent first
-            .select('-sourceText -generatedScript'); // Don't send full text, just metadata
+            .sort({ createdAt: -1 }) 
+            .select('name audioUrl duration createdAt'); // 🔧 FIXED: Ensuring createdAt is sent
 
-        res.json({
-            success: true,
-            count: podcasts.length,
-            podcasts: podcasts
-        });
-
+        res.json(podcasts); 
     } catch (error) {
         console.error("Fetch Podcasts Error:", error.message);
         res.status(500).json({ msg: "Server Error" });

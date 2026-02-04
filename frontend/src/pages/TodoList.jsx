@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   CheckSquare, Search, Bell, Plus, Trash2, CheckCircle2, 
   Circle, ListTodo, Clock, TrendingUp, Calendar, Flag, 
-  Loader, ChevronDown 
+  Loader, ChevronDown, Menu
 } from 'lucide-react';
 
 // --- SUB-COMPONENTS ---
@@ -132,7 +132,7 @@ const TaskItem = ({ todo, toggleComplete, handleDelete }) => {
 
 // --- MAIN PAGE COMPONENT ---
 
-const TodoListPage = () => { 
+const TodoListPage = ({ toggleSidebar }) => { 
   const navigate = useNavigate();
   
   // --- STATE ---
@@ -149,9 +149,20 @@ const TodoListPage = () => {
       // Load User Info
       const storedName = localStorage.getItem('userName') || 'User';
       const storedEmail = localStorage.getItem('userEmail') || 'user@example.com';
-      const initials = storedName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+      
+      let displayName = storedName;
+      
+      // 🔧 FIX 1: Strictly remove numbers (e.g. narayana23 -> narayana)
+      displayName = displayName.replace(/[0-9]/g, '');
+      
+      // Capitalize first letter
+      if (displayName) {
+        displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+      }
 
-      setUser({ name: storedName, email: storedEmail, initials });
+      const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+      setUser({ name: displayName, email: storedEmail, initials });
       
       try {
           setLoading(true);
@@ -290,17 +301,27 @@ const TodoListPage = () => {
       {/* HEADER */}
       <header className="flex items-center justify-between px-8 py-6 bg-[#0A0D17] sticky top-0 z-50 border-b border-gray-800">
         <div className="flex items-center gap-4">
+          
+          {/* 🔧 FIX: Added Sidebar Menu Button */}
+          <button
+            className="md:hidden text-[#94A3B8] hover:text-white p-1"
+            onClick={toggleSidebar}
+          >
+            <Menu size={24} />
+          </button>
+
           <div className="w-12 h-12 rounded-xl bg-[#7F5AF0]/10 flex items-center justify-center border border-[#7F5AF0]/20 shadow-lg shadow-[#7F5AF0]/5">
               <CheckSquare size={26} className="text-[#7F5AF0]" />
           </div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">
+          <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">
             To-Do List
           </h1>
         </div>
 
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3 pl-6 border-l border-gray-800">
-            <div className="text-right hidden md:block">
+            {/* 🔧 FIX 2: Details Visible on Mobile (removed hidden md:block) */}
+            <div className="text-right">
               <p className="text-sm font-bold text-white leading-tight">{user.name}</p>
               <p className="text-xs text-gray-500">{user.email}</p>
             </div>
@@ -312,7 +333,7 @@ const TodoListPage = () => {
       </header>
 
       {/* CONTENT AREA */}
-      <div className="px-8 pb-8">
+      <div className="px-4 md:px-8 pb-8">
         <div className="max-w-7xl mx-auto space-y-8 mt-6">
           
           {/* Stats Row */}
@@ -324,11 +345,11 @@ const TodoListPage = () => {
           </div>
 
           {/* Task Manager Card */}
-          <div className="bg-[#11141D] border border-gray-800 rounded-3xl p-8 shadow-2xl min-h-[500px] flex flex-col relative overflow-hidden">
+          <div className="bg-[#11141D] border border-gray-800 rounded-3xl p-4 md:p-8 shadow-2xl min-h-[500px] flex flex-col relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7F5AF0] via-[#00E0C7] to-[#7F5AF0] opacity-60"></div>
 
-            {/* Input & Priority Section */}
-            <form onSubmit={handleAddTask} className="relative mb-8 mt-2 flex flex-col md:flex-row gap-4">
+            {/* 🔧 FIX 3: Horizontal Layout for Add Task on Mobile (flex gap-3) */}
+            <form onSubmit={handleAddTask} className="relative mb-8 mt-2 flex gap-3">
               
               <div className="relative flex-1 group">
                 <input
@@ -336,29 +357,29 @@ const TodoListPage = () => {
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
                   placeholder="What needs to be done?"
-                  className="w-full h-14 bg-[#0A0D17] border border-gray-800 rounded-xl px-5 text-base text-white placeholder-gray-500 focus:outline-none focus:border-[#7F5AF0] focus:ring-1 focus:ring-[#7F5AF0] transition-all"
+                  className="w-full h-14 bg-[#0A0D17] border border-gray-800 rounded-xl px-5 text-base text-white placeholder-gray-500 focus:outline-none focus:border-[#7F5AF0] focus:ring-1 focus:ring-[#7F5AF0] transition-all min-w-0"
                 />
               </div>
               
               {/* PRIORITY SELECTOR */}
-              <div className="relative w-full md:w-48 group">
+              <div className="relative w-28 md:w-48 group flex-shrink-0">
                 <select
                   value={newPriority}
                   onChange={(e) => setNewPriority(e.target.value)}
-                  className="w-full h-14 bg-[#0A0D17] border border-gray-800 rounded-xl pl-5 pr-10 text-base text-gray-300 focus:outline-none focus:border-[#7F5AF0] appearance-none cursor-pointer hover:border-gray-600 transition-colors"
+                  className="w-full h-14 bg-[#0A0D17] border border-gray-800 rounded-xl pl-3 pr-2 md:pl-5 md:pr-10 text-sm md:text-base text-gray-300 focus:outline-none focus:border-[#7F5AF0] appearance-none cursor-pointer hover:border-gray-600 transition-colors text-center md:text-left"
                 >
-                  <option value="High">High Priority</option>
-                  <option value="Medium">Medium Priority</option>
-                  <option value="Low">Low Priority</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                  <Flag size={16} />
+                <div className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                  <Flag size={14} />
                 </div>
               </div>
 
               <button 
                 type="submit" 
-                className="h-14 w-14 md:w-auto md:px-8 bg-[#7F5AF0] hover:bg-[#6941c6] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#7F5AF0]/20 transition-all active:scale-95 group"
+                className="h-14 w-14 md:w-auto md:px-8 bg-[#7F5AF0] hover:bg-[#6941c6] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#7F5AF0]/20 transition-all active:scale-95 group flex-shrink-0"
               >
                 <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
                 <span className="hidden md:block ml-2 font-medium">Add</span>
@@ -367,14 +388,14 @@ const TodoListPage = () => {
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 border-b border-gray-800/50 pb-6">
-              <div className="flex bg-[#0A0D17] p-1.5 rounded-xl border border-gray-800">
-                <FilterButton label="All Tasks" active={filter === 'all'} onClick={() => setFilter('all')} />
+              <div className="flex bg-[#0A0D17] p-1.5 rounded-xl border border-gray-800 w-full sm:w-auto overflow-x-auto">
+                <FilterButton label="All" active={filter === 'all'} onClick={() => setFilter('all')} />
                 <FilterButton label="Active" active={filter === 'active'} onClick={() => setFilter('active')} />
-                <FilterButton label="Completed" active={filter === 'completed'} onClick={() => setFilter('completed')} />
+                <FilterButton label="Done" active={filter === 'completed'} onClick={() => setFilter('completed')} />
               </div>
               {completedCount > 0 && (
                 <button onClick={clearCompleted} className="text-gray-400 hover:text-red-400 text-sm font-medium flex items-center gap-2 transition-colors px-3 py-2 rounded-lg hover:bg-red-500/10">
-                  <Trash2 size={16} /> Clear Completed
+                  <Trash2 size={16} /> <span className="hidden sm:inline">Clear Completed</span>
                 </button>
               )}
             </div>
