@@ -6,9 +6,9 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 // 🔧 FIXED: Imports now match the filenames we created (PascalCase)
-import TodoListPage from './pages/TodoListPage'; 
-import PDFManagerPage from './pages/PDFManagerPage'; 
-import PodcastGenPage from './pages/PodcastGenPage'; 
+import TodoListPage from './pages/TodoList'; 
+import PDFManagerPage from './pages/PdfManager'; 
+import PodcastGenPage from './pages/podcastgenerator'; 
 
 // --- COMPONENTS ---
 import ProtectedRoute from './components/ProtectedRoute'; 
