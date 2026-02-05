@@ -55,22 +55,28 @@ const LoginPage = () => {
     };
   }, []);
 
-  // --- HANDLE SUBMIT (UPDATED) ---
+  // --- HANDLE SUBMIT (UPDATED WITH TOKEN LOGIC) ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     try {
-      // ✅ FIX APPLIED HERE: Added API_BASE_URL
+      // ✅ Uses API_BASE_URL
       const response = await axios.post(
         `${API_BASE_URL}/api/auth/login`, 
         { email, password },
         { withCredentials: true } 
       );
       
-      // 1. Save Token (if your backend sends one in the body, otherwise cookie handles it)
+      // 1. ✅ CRITICAL FIX: Save Token to LocalStorage
+      // This is required because cross-domain cookies are often blocked.
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+
+      // 2. Save Email
       localStorage.setItem('userEmail', email);
 
-      // 2. SMART NAME LOGIC
+      // 3. SMART NAME LOGIC
       // First, try to get the real name from the backend response
       let nameToSave = response.data.name || response.data.user?.name;
 
@@ -83,7 +89,7 @@ const LoginPage = () => {
         nameToSave = namePart.charAt(0).toUpperCase() + namePart.slice(1);
       }
 
-      // 3. Save the final name to storage so Dashboard can see it
+      // 4. Save the final name to storage so Dashboard can see it
       localStorage.setItem('userName', nameToSave);
 
       navigate('/dashboard');

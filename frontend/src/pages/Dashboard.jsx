@@ -98,6 +98,15 @@ const Dashboard = ({ toggleSidebar }) => {
     });
   };
 
+  // ✅ AUTH HELPER: Get Header with Token
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('token');
+    return { 
+        headers: { 'x-auth-token': token },
+        withCredentials: true 
+    };
+  };
+
   // --- DATA FETCHING ---
   useEffect(() => {
     const fetchData = async () => {
@@ -112,16 +121,16 @@ const Dashboard = ({ toggleSidebar }) => {
           initials: getInitials(storedName || 'User')
         });
 
-        // FETCH TODOS (✅ Uses API_BASE_URL)
-        const todoRes = await axios.get(`${API_BASE_URL}/api/todos`, { withCredentials: true });
+        // FETCH TODOS (✅ Uses Token)
+        const todoRes = await axios.get(`${API_BASE_URL}/api/todos`, getAuthHeader());
         const todosWithDates = todoRes.data.map(t => ({
             ...t, 
             createdAt: t.createdAt || t.date || new Date().toISOString() 
         }));
         setTodos(todosWithDates);
 
-        // FETCH PDFS (✅ Uses API_BASE_URL)
-        const pdfRes = await axios.get(`${API_BASE_URL}/api/pdf`, { withCredentials: true });
+        // FETCH PDFS (✅ Uses Token)
+        const pdfRes = await axios.get(`${API_BASE_URL}/api/pdf`, getAuthHeader());
         const pdfData = Array.isArray(pdfRes.data) ? pdfRes.data : []; 
         const processedPdfs = pdfData.map(p => ({
             ...p, 
@@ -129,9 +138,9 @@ const Dashboard = ({ toggleSidebar }) => {
         }));
         setRecentPdfs(processedPdfs); 
 
-        // FETCH PODCASTS (✅ Uses API_BASE_URL)
+        // FETCH PODCASTS (✅ Uses Token)
         try {
-            const podcastRes = await axios.get(`${API_BASE_URL}/api/podcast`, { withCredentials: true });
+            const podcastRes = await axios.get(`${API_BASE_URL}/api/podcast`, getAuthHeader());
             const podcastData = Array.isArray(podcastRes.data) ? podcastRes.data : [];
             const processedPodcasts = podcastData.map(p => ({
                 ...p,
@@ -162,10 +171,10 @@ const Dashboard = ({ toggleSidebar }) => {
     if (e.key === 'Enter' && newTask.trim()) {
       try {
         const now = new Date().toISOString();
-        // ✅ Uses API_BASE_URL
+        // ✅ Uses Token
         const res = await axios.post(`${API_BASE_URL}/api/todos`, 
           { text: newTask, completed: false, priority: priority, createdAt: now },
-          { withCredentials: true } 
+          getAuthHeader()
         );
         setTodos([...todos, { ...res.data, createdAt: now }]);
         setStats(prev => ({ ...prev, pendingTasks: prev.pendingTasks + 1 }));
@@ -176,8 +185,8 @@ const Dashboard = ({ toggleSidebar }) => {
 
   const handleDeleteTask = async (id) => {
     try {
-      // ✅ Uses API_BASE_URL
-      await axios.delete(`${API_BASE_URL}/api/todos/${id}`, { withCredentials: true });
+      // ✅ Uses Token
+      await axios.delete(`${API_BASE_URL}/api/todos/${id}`, getAuthHeader());
       const newTodos = todos.filter(task => task._id !== id);
       setTodos(newTodos);
       setStats(prev => ({ ...prev, pendingTasks: newTodos.filter(t => !t.completed).length }));
@@ -189,8 +198,8 @@ const Dashboard = ({ toggleSidebar }) => {
       const newTodos = todos.map(t => t._id === id ? { ...t, completed: !currentStatus } : t);
       setTodos(newTodos);
       setStats(prev => ({ ...prev, pendingTasks: newTodos.filter(t => !t.completed).length }));
-      // ✅ Uses API_BASE_URL
-      await axios.put(`${API_BASE_URL}/api/todos/${id}`, { completed: !currentStatus }, { withCredentials: true });
+      // ✅ Uses Token
+      await axios.put(`${API_BASE_URL}/api/todos/${id}`, { completed: !currentStatus }, getAuthHeader());
     } catch (error) { console.error(error); }
   };
 
@@ -202,9 +211,12 @@ const Dashboard = ({ toggleSidebar }) => {
     const formData = new FormData();
     formData.append('pdf', file);
     try {
-        // ✅ Uses API_BASE_URL
+        // ✅ Uses Token (Special Header for Multipart)
         const res = await axios.post(`${API_BASE_URL}/api/pdf/upload`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
+            headers: { 
+                'Content-Type': 'multipart/form-data',
+                'x-auth-token': localStorage.getItem('token') // Manually adding token here
+            },
             withCredentials: true
         });
         navigate('/pdf', { state: { activePdf: res.data } });
@@ -219,8 +231,8 @@ const Dashboard = ({ toggleSidebar }) => {
   const handleDeletePdf = async (e, id) => {
       e.preventDefault(); e.stopPropagation(); 
       try {
-          // ✅ Uses API_BASE_URL
-          await axios.delete(`${API_BASE_URL}/api/pdf/${id}`, { withCredentials: true });
+          // ✅ Uses Token
+          await axios.delete(`${API_BASE_URL}/api/pdf/${id}`, getAuthHeader());
           setRecentPdfs(recentPdfs.filter(p => (p._id || p.id) !== id));
           setStats(prev => ({...prev, totalPdfs: prev.totalPdfs - 1}));
           setOpenPdfMenu(null);
@@ -230,8 +242,8 @@ const Dashboard = ({ toggleSidebar }) => {
   const handleDeletePodcast = async (e, id) => {
       e.preventDefault(); e.stopPropagation();
       try {
-          // ✅ Uses API_BASE_URL
-          await axios.delete(`${API_BASE_URL}/api/podcast/${id}`, { withCredentials: true });
+          // ✅ Uses Token
+          await axios.delete(`${API_BASE_URL}/api/podcast/${id}`, getAuthHeader());
           setRecentPodcasts(recentPodcasts.filter(p => (p._id || p.id) !== id));
           setStats(prev => ({...prev, totalPodcasts: prev.totalPodcasts - 1}));
           setOpenPodcastMenu(null);
@@ -324,7 +336,6 @@ const Dashboard = ({ toggleSidebar }) => {
                         <div className="flex items-center gap-3 overflow-hidden">
                             <div className="w-10 h-10 rounded-lg bg-[#7F5AF0]/10 flex items-center justify-center text-[#7F5AF0] flex-shrink-0"><Play size={14} fill="currentColor"/></div>
                             <div className="min-w-0">
-                                {/* Shows the specific name saved in backend (PDF name or Text title) */}
                                 <h4 className="text-sm font-medium text-white truncate max-w-[120px]">{podcast.name || "Podcast"}</h4>
                                 <div className="flex items-center gap-1.5 text-[10px] text-[#94A3B8] mt-0.5"><Clock size={10} /> <span>{formatDate(podcast.date)}</span></div>
                             </div>
@@ -425,7 +436,6 @@ const Dashboard = ({ toggleSidebar }) => {
                         <span className={`text-sm ${task.completed ? 'line-through text-gray-500' : 'text-gray-200'}`}>{task.text}</span>
                         <div className="flex gap-2 items-center mt-1">
                            <span className={`text-[10px] uppercase font-bold flex items-center gap-1 ${getPriorityColor(task.priority || 'Medium')}`}><Flag size={8} fill="currentColor" /> {task.priority || 'Medium'}</span>
-                           {/* 🔧 FIX: Date added to To-Do List */}
                            <span className="text-[10px] text-[#94A3B8] flex items-center gap-1 border-l border-white/10 pl-2"><Calendar size={8} /> {formatDate(task.createdAt || task.date)}</span>
                         </div>
                       </div>

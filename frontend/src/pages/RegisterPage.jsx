@@ -3,6 +3,7 @@
 import React, { useState, Suspense, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import API_BASE_URL from '../config'; // ✅ IMPORTED CONFIG
 import Spline from '@splinetool/react-spline';
 
 const RegisterPage = () => {
@@ -69,9 +70,16 @@ const RegisterPage = () => {
     e.preventDefault();
     setError(null);
     try {
-      // ✅ FIX APPLIED HERE: Updated URL to Render Backend
-      const response = await axios.post('https://query-stream.onrender.com/api/auth/register', { email, password });
+      // ✅ FIX APPLIED HERE: Use API_BASE_URL and withCredentials
+      const response = await axios.post(
+        `${API_BASE_URL}/api/auth/register`, 
+        { email, password },
+        { withCredentials: true }
+      );
+      
       console.log('Registration successful:', response.data);
+      
+      // Navigate to Login Page so the user can sign in and get their Token
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.msg || 'Registration failed.');

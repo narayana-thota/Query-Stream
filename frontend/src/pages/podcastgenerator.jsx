@@ -7,6 +7,7 @@ import {
   FileText, Settings2, Menu, ChevronDown,
   CheckCircle2, Loader, AlertCircle, Upload, X, Sparkles
 } from 'lucide-react';
+import API_BASE_URL from '../config'; // ✅ IMPORTED CONFIG
 
 // --- SUB-COMPONENT: CUSTOM AUDIO PLAYER ---
 const AudioPlayer = ({ audioUrl, duration }) => {
@@ -246,8 +247,8 @@ const PodcastGenPage = ({ toggleSidebar }) => {
         };
         if (token) config.headers['x-auth-token'] = token;
 
-        // ✅ URL UPDATED FOR DEPLOYMENT
-        await axios.delete(`https://query-stream.onrender.com/api/podcast/${currentPodcastId}`, config);
+        // ✅ Uses API_BASE_URL + Token
+        await axios.delete(`${API_BASE_URL}/api/podcast/${currentPodcastId}`, config);
         console.log(`🗑️ Deleted podcast from database: ${currentPodcastId}`);
         
         // Clear the generated data
@@ -298,8 +299,8 @@ const PodcastGenPage = ({ toggleSidebar }) => {
       };
       if (token) config.headers['x-auth-token'] = token;
 
-      // ✅ URL UPDATED FOR DEPLOYMENT
-      const response = await axios.post('https://query-stream.onrender.com/api/podcast/generate', formData, config);
+      // ✅ Uses API_BASE_URL + Token
+      const response = await axios.post(`${API_BASE_URL}/api/podcast/generate`, formData, config);
 
       setGeneratedData({
         audioUrl: response.data.audioUrl,
@@ -701,8 +702,8 @@ const PodcastGenPage = ({ toggleSidebar }) => {
                               };
                               if (token) config.headers['x-auth-token'] = token;
 
-                              // ✅ URL UPDATED FOR DEPLOYMENT
-                              await axios.delete(`https://query-stream.onrender.com/api/podcast/${currentPodcastId}`, config);
+                              // ✅ Uses API_BASE_URL + Token
+                              await axios.delete(`${API_BASE_URL}/api/podcast/${currentPodcastId}`, config);
                               
                               // Clear the UI
                               setGeneratedData(null);

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
+import API_BASE_URL from '../config'; // ✅ IMPORTED CONFIG
 import { 
   FileText, Upload, Send, Bot, User, Loader, 
   CheckCircle2, AlertCircle, Sparkles, MessageSquare, Menu
@@ -29,10 +30,17 @@ const PDFManagerPage = ({ toggleSidebar }) => {
 
   const chatEndRef = useRef(null);
 
+  // ✅ AUTH HELPER: Get Header with Token
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('token');
+    return { 
+        headers: { 'x-auth-token': token },
+        withCredentials: true 
+    };
+  };
+
   // --- 1. INITIAL LOAD ---
   useEffect(() => {
-    // REMOVED: window.scrollTo(0, 0) to prevent auto-scrolling up
-    
     // Load User
     const storedName = localStorage.getItem('userName') || 'User';
     const storedEmail = localStorage.getItem('userEmail') || localStorage.getItem('email') || 'user@example.com';
@@ -113,9 +121,12 @@ const PDFManagerPage = ({ toggleSidebar }) => {
     formData.append('pdf', file);
 
     try {
-      // ✅ FIX APPLIED HERE: Updated URL to Render Backend
-      const res = await axios.post('https://query-stream.onrender.com/api/pdf/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // ✅ Uses API_BASE_URL + Token (Special Header for Multipart)
+      const res = await axios.post(`${API_BASE_URL}/api/pdf/upload`, formData, {
+        headers: { 
+            'Content-Type': 'multipart/form-data',
+            'x-auth-token': localStorage.getItem('token') 
+        },
         withCredentials: true 
       });
 
@@ -147,13 +158,11 @@ const PDFManagerPage = ({ toggleSidebar }) => {
     setChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
 
     try {
-      // ✅ FIX APPLIED HERE: Updated URL to Render Backend
-      const res = await axios.post('https://query-stream.onrender.com/api/pdf/chat', {
+      // ✅ Uses API_BASE_URL + Token
+      const res = await axios.post(`${API_BASE_URL}/api/pdf/chat`, {
         pdfId: pdfId,
         question: userMsg
-      }, {
-        withCredentials: true
-      });
+      }, getAuthHeader());
 
       setChatHistory(prev => [...prev, { 
         role: 'ai', 
