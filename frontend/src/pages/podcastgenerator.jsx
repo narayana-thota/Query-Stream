@@ -1,3 +1,5 @@
+// frontend/src/pages/PodcastGenPage.jsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
@@ -244,7 +246,8 @@ const PodcastGenPage = ({ toggleSidebar }) => {
         };
         if (token) config.headers['x-auth-token'] = token;
 
-        await axios.delete(`http://localhost:5000/api/podcast/${currentPodcastId}`, config);
+        // ✅ URL UPDATED FOR DEPLOYMENT
+        await axios.delete(`https://query-stream.onrender.com/api/podcast/${currentPodcastId}`, config);
         console.log(`🗑️ Deleted podcast from database: ${currentPodcastId}`);
         
         // Clear the generated data
@@ -295,7 +298,8 @@ const PodcastGenPage = ({ toggleSidebar }) => {
       };
       if (token) config.headers['x-auth-token'] = token;
 
-      const response = await axios.post('http://localhost:5000/api/podcast/generate', formData, config);
+      // ✅ URL UPDATED FOR DEPLOYMENT
+      const response = await axios.post('https://query-stream.onrender.com/api/podcast/generate', formData, config);
 
       setGeneratedData({
         audioUrl: response.data.audioUrl,
@@ -316,7 +320,7 @@ const PodcastGenPage = ({ toggleSidebar }) => {
               setErrorMsg(error.response.data.msg || "Server Error. Please try again.");
           }
       } else if (error.request) {
-          setErrorMsg("Cannot connect to server (Port 5000). Is backend running?");
+          setErrorMsg("Cannot connect to server. Is backend running?");
       } else {
           setErrorMsg("An unexpected error occurred.");
       }
@@ -352,11 +356,10 @@ const PodcastGenPage = ({ toggleSidebar }) => {
     return 'Long (5m+)';
   };
 
-  // 🔧 FIX: Changed to h-screen, flex-col, overflow-hidden to fix Header
   return (
     <div className="h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 flex flex-col overflow-hidden">
       
-      {/* HEADER - Added border-b border-gray-800 to match PDF Manager */}
+      {/* HEADER */}
       <header className="flex items-center justify-between px-8 py-6 flex-shrink-0 bg-[#0A0D17] z-10 border-b border-gray-800">
         <div className="flex items-center gap-4">
           <button
@@ -366,7 +369,6 @@ const PodcastGenPage = ({ toggleSidebar }) => {
             <Menu size={24} />
           </button>
           
-          {/* Custom Brand Logo */}
           <div className="w-12 h-12 rounded-xl bg-[#7F5AF0]/10 flex items-center justify-center border border-[#7F5AF0]/20 shadow-lg shadow-[#7F5AF0]/5">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="3" y="10" width="2" height="4" rx="1" fill="#7F5AF0" fillOpacity="0.5"/>
@@ -399,7 +401,7 @@ const PodcastGenPage = ({ toggleSidebar }) => {
         </div>
       </header>
 
-      {/* CONTENT - Wrapped in flex-1 overflow-y-auto to allow scrolling independently of header */}
+      {/* CONTENT */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -660,7 +662,7 @@ const PodcastGenPage = ({ toggleSidebar }) => {
                 </div>
               )}
 
-              {/* Result State - FIXED SCRIPT CONTAINER */}
+              {/* Result State */}
               {generatedData && !isGenerating && !errorMsg && (
                 <div className="flex flex-col h-full p-8">
                   <div className="flex items-center justify-between mb-8">
@@ -699,7 +701,8 @@ const PodcastGenPage = ({ toggleSidebar }) => {
                               };
                               if (token) config.headers['x-auth-token'] = token;
 
-                              await axios.delete(`http://localhost:5000/api/podcast/${currentPodcastId}`, config);
+                              // ✅ URL UPDATED FOR DEPLOYMENT
+                              await axios.delete(`https://query-stream.onrender.com/api/podcast/${currentPodcastId}`, config);
                               
                               // Clear the UI
                               setGeneratedData(null);
@@ -726,7 +729,6 @@ const PodcastGenPage = ({ toggleSidebar }) => {
                     <AudioPlayer audioUrl={generatedData.audioUrl} duration={120} />
                   </div>
 
-                  {/* 🔧 FIXED: Script Box - Maximum Height with Scroll */}
                   <div className="flex-1 min-h-0 bg-[#0A0D17] border border-white/5 rounded-2xl overflow-hidden flex flex-col max-h-[520px]">
                     <div className="p-4 border-b border-white/5 bg-[#0A0D17] flex items-center gap-2 flex-shrink-0">
                       <FileText size={16} className="text-gray-500"/>
@@ -735,7 +737,6 @@ const PodcastGenPage = ({ toggleSidebar }) => {
                       </h3>
                     </div>
                     
-                    {/* 🔧 FIXED: Set max-h-[520px] to prevent over-expansion while allowing scroll */}
                     <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                       <p className="text-[#94A3B8] leading-8 text-lg font-light whitespace-pre-line">
                         {generatedData.transcript}

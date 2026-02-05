@@ -113,7 +113,8 @@ const PDFManagerPage = ({ toggleSidebar }) => {
     formData.append('pdf', file);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/pdf/upload', formData, {
+      // ✅ FIX APPLIED HERE: Updated URL to Render Backend
+      const res = await axios.post('https://query-stream.onrender.com/api/pdf/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true 
       });
@@ -146,7 +147,8 @@ const PDFManagerPage = ({ toggleSidebar }) => {
     setChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/pdf/chat', {
+      // ✅ FIX APPLIED HERE: Updated URL to Render Backend
+      const res = await axios.post('https://query-stream.onrender.com/api/pdf/chat', {
         pdfId: pdfId,
         question: userMsg
       }, {

@@ -166,7 +166,8 @@ const TodoListPage = ({ toggleSidebar }) => {
       
       try {
           setLoading(true);
-          const response = await axios.get('http://localhost:5000/api/todos', { withCredentials: true });
+          // ✅ URL UPDATED FOR DEPLOYMENT
+          const response = await axios.get('https://query-stream.onrender.com/api/todos', { withCredentials: true });
           setTodos(response.data);
       } catch (error) {
           console.error("Error fetching tasks:", error);
@@ -192,7 +193,8 @@ const TodoListPage = ({ toggleSidebar }) => {
     };
     
     try {
-        const res = await axios.post('http://localhost:5000/api/todos', data, { withCredentials: true });
+        // ✅ URL UPDATED FOR DEPLOYMENT
+        const res = await axios.post('https://query-stream.onrender.com/api/todos', data, { withCredentials: true });
         
         // Add new task to state immediately
         setTodos(prevTodos => [res.data, ...prevTodos]);
@@ -210,7 +212,8 @@ const TodoListPage = ({ toggleSidebar }) => {
   const toggleComplete = async (id, currentStatus) => {
     setTodos(todos.map(t => t._id === id ? { ...t, completed: !currentStatus } : t));
     try {
-        await axios.put(`http://localhost:5000/api/todos/${id}`, 
+        // ✅ URL UPDATED FOR DEPLOYMENT
+        await axios.put(`https://query-stream.onrender.com/api/todos/${id}`, 
           { completed: !currentStatus }, 
           { withCredentials: true }
         );
@@ -223,7 +226,8 @@ const TodoListPage = ({ toggleSidebar }) => {
     const originalTodos = todos;
     setTodos(todos.filter(t => t._id !== id));
     try {
-        await axios.delete(`http://localhost:5000/api/todos/${id}`, { withCredentials: true });
+        // ✅ URL UPDATED FOR DEPLOYMENT
+        await axios.delete(`https://query-stream.onrender.com/api/todos/${id}`, { withCredentials: true });
     } catch (error) {
         setTodos(originalTodos); 
     }

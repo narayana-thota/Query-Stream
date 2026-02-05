@@ -3,6 +3,7 @@
 import React, { useState, Suspense, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import API_BASE_URL from '../config'; // ✅ IMPORTED CONFIG
 import Spline from '@splinetool/react-spline';
 
 const LoginPage = () => {
@@ -59,9 +60,9 @@ const LoginPage = () => {
     e.preventDefault();
     setError(null);
     try {
-      // ✅ FIX APPLIED HERE: Added { withCredentials: true }
+      // ✅ FIX APPLIED HERE: Added API_BASE_URL
       const response = await axios.post(
-        'http://localhost:5000/api/auth/login', 
+        `${API_BASE_URL}/api/auth/login`, 
         { email, password },
         { withCredentials: true } 
       );

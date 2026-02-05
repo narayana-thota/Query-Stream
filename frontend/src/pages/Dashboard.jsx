@@ -1,6 +1,8 @@
+// frontend/src/pages/Dashboard.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import API_BASE_URL from '../config'; // ✅ IMPORTED CONFIG
 import {
   CheckSquare, FileText, Plus,
   Trash2, Check, Play, AudioLines, Clock,
@@ -110,30 +112,30 @@ const Dashboard = ({ toggleSidebar }) => {
           initials: getInitials(storedName || 'User')
         });
 
-        // FETCH TODOS
-        const todoRes = await axios.get('http://localhost:5000/api/todos', { withCredentials: true });
+        // FETCH TODOS (✅ Uses API_BASE_URL)
+        const todoRes = await axios.get(`${API_BASE_URL}/api/todos`, { withCredentials: true });
         const todosWithDates = todoRes.data.map(t => ({
             ...t, 
             createdAt: t.createdAt || t.date || new Date().toISOString() 
         }));
         setTodos(todosWithDates);
 
-        // FETCH PDFS
-        const pdfRes = await axios.get('http://localhost:5000/api/pdf', { withCredentials: true });
+        // FETCH PDFS (✅ Uses API_BASE_URL)
+        const pdfRes = await axios.get(`${API_BASE_URL}/api/pdf`, { withCredentials: true });
         const pdfData = Array.isArray(pdfRes.data) ? pdfRes.data : []; 
         const processedPdfs = pdfData.map(p => ({
             ...p, 
-            date: p.date || p.createdAt || new Date().toISOString() // Ensure date exists
+            date: p.date || p.createdAt || new Date().toISOString() 
         }));
         setRecentPdfs(processedPdfs); 
 
-        // FETCH PODCASTS
+        // FETCH PODCASTS (✅ Uses API_BASE_URL)
         try {
-            const podcastRes = await axios.get('http://localhost:5000/api/podcast', { withCredentials: true });
+            const podcastRes = await axios.get(`${API_BASE_URL}/api/podcast`, { withCredentials: true });
             const podcastData = Array.isArray(podcastRes.data) ? podcastRes.data : [];
             const processedPodcasts = podcastData.map(p => ({
                 ...p,
-                date: p.createdAt || p.date || new Date().toISOString() // Prioritize createdAt
+                date: p.createdAt || p.date || new Date().toISOString()
             }));
             
             // Sort by date newest first
@@ -160,7 +162,8 @@ const Dashboard = ({ toggleSidebar }) => {
     if (e.key === 'Enter' && newTask.trim()) {
       try {
         const now = new Date().toISOString();
-        const res = await axios.post('http://localhost:5000/api/todos', 
+        // ✅ Uses API_BASE_URL
+        const res = await axios.post(`${API_BASE_URL}/api/todos`, 
           { text: newTask, completed: false, priority: priority, createdAt: now },
           { withCredentials: true } 
         );
@@ -173,7 +176,8 @@ const Dashboard = ({ toggleSidebar }) => {
 
   const handleDeleteTask = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/todos/${id}`, { withCredentials: true });
+      // ✅ Uses API_BASE_URL
+      await axios.delete(`${API_BASE_URL}/api/todos/${id}`, { withCredentials: true });
       const newTodos = todos.filter(task => task._id !== id);
       setTodos(newTodos);
       setStats(prev => ({ ...prev, pendingTasks: newTodos.filter(t => !t.completed).length }));
@@ -185,7 +189,8 @@ const Dashboard = ({ toggleSidebar }) => {
       const newTodos = todos.map(t => t._id === id ? { ...t, completed: !currentStatus } : t);
       setTodos(newTodos);
       setStats(prev => ({ ...prev, pendingTasks: newTodos.filter(t => !t.completed).length }));
-      await axios.put(`http://localhost:5000/api/todos/${id}`, { completed: !currentStatus }, { withCredentials: true });
+      // ✅ Uses API_BASE_URL
+      await axios.put(`${API_BASE_URL}/api/todos/${id}`, { completed: !currentStatus }, { withCredentials: true });
     } catch (error) { console.error(error); }
   };
 
@@ -197,7 +202,8 @@ const Dashboard = ({ toggleSidebar }) => {
     const formData = new FormData();
     formData.append('pdf', file);
     try {
-        const res = await axios.post('http://localhost:5000/api/pdf/upload', formData, {
+        // ✅ Uses API_BASE_URL
+        const res = await axios.post(`${API_BASE_URL}/api/pdf/upload`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
             withCredentials: true
         });
@@ -213,7 +219,8 @@ const Dashboard = ({ toggleSidebar }) => {
   const handleDeletePdf = async (e, id) => {
       e.preventDefault(); e.stopPropagation(); 
       try {
-          await axios.delete(`http://localhost:5000/api/pdf/${id}`, { withCredentials: true });
+          // ✅ Uses API_BASE_URL
+          await axios.delete(`${API_BASE_URL}/api/pdf/${id}`, { withCredentials: true });
           setRecentPdfs(recentPdfs.filter(p => (p._id || p.id) !== id));
           setStats(prev => ({...prev, totalPdfs: prev.totalPdfs - 1}));
           setOpenPdfMenu(null);
@@ -223,7 +230,8 @@ const Dashboard = ({ toggleSidebar }) => {
   const handleDeletePodcast = async (e, id) => {
       e.preventDefault(); e.stopPropagation();
       try {
-          await axios.delete(`http://localhost:5000/api/podcast/${id}`, { withCredentials: true });
+          // ✅ Uses API_BASE_URL
+          await axios.delete(`${API_BASE_URL}/api/podcast/${id}`, { withCredentials: true });
           setRecentPodcasts(recentPodcasts.filter(p => (p._id || p.id) !== id));
           setStats(prev => ({...prev, totalPodcasts: prev.totalPodcasts - 1}));
           setOpenPodcastMenu(null);

@@ -64,12 +64,13 @@ const RegisterPage = () => {
     };
   }, []);
 
+  // --- SUBMIT HANDLER (UPDATED FOR DEPLOYMENT) ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     try {
-      // Note: Make sure your backend endpoint is correct
-      const response = await axios.post('http://localhost:5000/api/auth/register', { email, password });
+      // ✅ FIX APPLIED HERE: Updated URL to Render Backend
+      const response = await axios.post('https://query-stream.onrender.com/api/auth/register', { email, password });
       console.log('Registration successful:', response.data);
       navigate('/login');
     } catch (err) {
