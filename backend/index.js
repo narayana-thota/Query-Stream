@@ -23,7 +23,10 @@ const app = express();
 
 // --- MIDDLEWARE ---
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",                  // Local Development
+    "https://query-stream.netlify.app"        // ✅ YOUR DEPLOYED FRONTEND
+  ],
   credentials: true
 }));
 
