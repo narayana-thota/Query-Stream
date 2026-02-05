@@ -5,14 +5,15 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
-import TodoListPage from './pages/TodoList';       // Matches 'TodoList.jsx' in Explorer
-import PDFManagerPage from './pages/PdfManager';   // Matches 'PdfManager.jsx' in Explorer
-import PodcastGenPage from './pages/podcastgenerator'; // ⚠️ FIXED: Matches 'podcastgenerator.jsx' (lowercase)
+// 🔧 FIXED: Imports now match the filenames we created (PascalCase)
+import TodoListPage from './pages/TodoListPage'; 
+import PDFManagerPage from './pages/PDFManagerPage'; 
+import PodcastGenPage from './pages/PodcastGenPage'; 
 
 // --- COMPONENTS ---
-// Assuming you have this, otherwise remove the wrapper
 import ProtectedRoute from './components/ProtectedRoute'; 
-import Layout from './components/layout'; // ⚠️ FIXED: Matches 'layout.jsx' (lowercase tab)
+// Ensure your file is named 'Layout.jsx' or 'layout.jsx' and matches this import exactly
+import Layout from './components/layout'; 
 
 import './App.css';
 
@@ -20,6 +21,7 @@ function App() {
   return (
     <Routes>
       {/* --- PUBLIC ROUTES (No Layout) --- */}
+      {/* 🔧 FIXED: This redirect prevents the blank screen on homepage */}
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
