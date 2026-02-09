@@ -6,7 +6,7 @@ import API_BASE_URL from '../config';
 import {
   CheckSquare, FileText, Plus,
   Trash2, Check, Play, AudioLines, Clock,
-  MoreVertical, Flag, Menu, Upload, Loader2, Calendar 
+  MoreVertical, Flag, Menu, Upload, Loader2, Calendar, Layout
 } from 'lucide-react';
 
 const Dashboard = ({ toggleSidebar }) => {
@@ -71,7 +71,6 @@ const Dashboard = ({ toggleSidebar }) => {
     }
   };
 
-  // Date Formatter
   const formatDate = (dateString) => {
     if (!dateString) return 'Today';
     const date = new Date(dateString);
@@ -84,7 +83,6 @@ const Dashboard = ({ toggleSidebar }) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Smart Task Sorting (Date > Priority)
   const getSortedTodos = () => {
     const priorityWeight = { 'High': 3, 'Medium': 2, 'Low': 1 };
     return [...todos].sort((a, b) => {
@@ -98,7 +96,6 @@ const Dashboard = ({ toggleSidebar }) => {
     });
   };
 
-  // AUTH HELPER
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
     return { 
@@ -341,19 +338,19 @@ const Dashboard = ({ toggleSidebar }) => {
 
   return (
     // 🔧 FIX: overflow-x-hidden, reduced bottom padding (pb-6), consistent gaps
-    <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8 pb-6 md:pb-8 overflow-x-hidden min-h-screen">
+    <div className="h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 flex flex-col overflow-hidden">
       
-      {/* HEADER: Constant, Profile Fixed (Email Hidden on Mobile) */}
-      <header className="flex items-center justify-between sticky top-0 z-50 bg-[#0A0D17]/80 backdrop-blur-md py-4 -mx-4 px-4 md:mx-0 md:px-0 md:bg-transparent md:static">
+      {/* HEADER: Fixed (Sticky) */}
+      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] flex-shrink-0 border-b border-gray-800 z-50">
         <div className="flex items-center gap-3">
              <button className="md:hidden text-[#94A3B8] hover:text-white p-1" onClick={toggleSidebar}><Menu size={24} /></button>
             <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">Dashboard</h1>
         </div>
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-4 md:gap-6 shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end">
+              {/* Hide email on mobile */}
               <span className="text-sm font-bold text-white leading-none truncate max-w-[100px] md:max-w-none">{user.name.replace(/[0-9]/g, '')}</span>
-              {/* 🔧 FIX: Hide email on mobile to save space/prevent cut off */}
               <span className="text-[11px] text-[#94A3B8] font-medium mt-1 hidden sm:block">{user.email}</span>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-sm font-bold text-white shadow-lg shrink-0">{user.initials}</div>
@@ -361,99 +358,104 @@ const Dashboard = ({ toggleSidebar }) => {
         </div>
       </header>
 
-      <section className="relative w-full rounded-2xl overflow-hidden p-5 md:p-8 shadow-2xl shadow-[#7F5AF0]/10 border border-white/5">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#7F5AF0] to-[#00E0C7] opacity-10"></div>
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-20 group-hover:opacity-30 transition-opacity duration-700"></div>
-        <div className="relative z-10">
-          <h2 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">{greeting}, {user.name.replace(/[0-9]/g, '').split(' ')[0]}! 👋</h2>
-          <p className="text-[#94A3B8] text-xs md:text-lg">Ready to boost your productivity? You have <span className="text-[#00E0C7] font-bold">{stats.pendingTasks} pending tasks</span> today.</p>
-        </div>
-      </section>
-
-      {/* 🔧 FIX: Stats Grid - 3 cols on Mobile (Same Row), Vertical Layout inside Card */}
-      <div className="grid grid-cols-3 gap-3 md:gap-6">
-         {/* PENDING CARD */}
-         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] bg-[#11141D] border border-white/5 group transition-all duration-300 flex flex-col items-center justify-center py-4 md:py-6 gap-2">
-            <div className="absolute inset-0 bg-[#7F5AF0]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold z-10">PENDING</p>
-            <h3 className={`text-2xl md:text-5xl font-black z-10 ${stats.pendingTasks > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.pendingTasks}</h3>
-            {/* 🔧 FIX: Glassmorphism Icon Box */}
-            <div className="mt-1 p-2 rounded-lg bg-[#1F2937]/80 backdrop-blur-md border border-white/10 text-[#7F5AF0] shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform z-10">
-               <CheckSquare size={18} className="md:w-6 md:h-6" />
-            </div>
-         </div>
-
-         {/* PDFS CARD */}
-         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] bg-[#11141D] border border-white/5 group transition-all duration-300 flex flex-col items-center justify-center py-4 md:py-6 gap-2">
-            <div className="absolute inset-0 bg-[#00E0C7]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold z-10">PDFS</p>
-            <h3 className={`text-2xl md:text-5xl font-black z-10 ${stats.totalPdfs > 0 ? 'text-[#00E0C7]' : 'text-white'}`}>{stats.totalPdfs}</h3>
-            {/* 🔧 FIX: Glassmorphism Icon Box */}
-            <div className="mt-1 p-2 rounded-lg bg-[#1F2937]/80 backdrop-blur-md border border-white/10 text-[#00E0C7] shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform z-10">
-               <FileText size={18} className="md:w-6 md:h-6" />
-            </div>
-         </div>
-
-         {/* PODCASTS CARD */}
-         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] bg-[#11141D] border border-white/5 group transition-all duration-300 flex flex-col items-center justify-center py-4 md:py-6 gap-2">
-             <div className="absolute inset-0 bg-[#7F5AF0]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-             <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold z-10">PODCASTS</p>
-             <h3 className={`text-2xl md:text-5xl font-black z-10 ${stats.totalPodcasts > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.totalPodcasts}</h3>
-             {/* 🔧 FIX: Glassmorphism Icon Box */}
-             <div className="mt-1 p-2 rounded-lg bg-[#1F2937]/80 backdrop-blur-md border border-white/10 text-[#7F5AF0] shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform z-10">
-               <AudioLines size={18} className="md:w-6 md:h-6" />
-             </div>
-         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
-        <div className="lg:col-span-2 bg-[#11141D] rounded-2xl border border-white/10 p-5 md:p-6 flex flex-col min-h-[500px] md:h-[550px]">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg md:text-xl font-bold text-white">Recent Tasks</h3>
-            <Link to="/todo" className="text-sm text-[#7F5AF0] hover:text-[#00E0C7] font-medium">See All</Link>
-          </div>
-          
-          {/* 🔧 FIX: Priority Focus Box - Added 'overflow-hidden' and adjusted gaps */}
-          <div className="relative mb-4 md:mb-6">
-            <div className="relative mb-3">
-                <Plus className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
-                <input type="text" value={newTask} onChange={(e) => setNewTask(e.target.value)} onKeyDown={handleAddTask} placeholder="Add a task..." className="w-full bg-[#0A0D17] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-[#7F5AF0] transition-all placeholder:text-[#94A3B8]/50 shadow-inner" />
-            </div>
-            
-            {/* Priority Buttons Row */}
-            <div className="flex items-center gap-2 overflow-hidden">
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider hidden md:block mr-1">Priority:</span>
-                {[ { val: 'Low', color: 'text-blue-400', border: 'border-blue-400/30 bg-blue-400/10' }, { val: 'Medium', color: 'text-amber-400', border: 'border-amber-400/30 bg-amber-400/10' }, { val: 'High', color: 'text-red-400', border: 'border-red-400/30 bg-red-400/10' } ].map((p) => (
-                    <button key={p.val} onClick={() => setPriority(p.val)} className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-2 py-2 md:px-3 rounded-lg md:rounded-md transition-all border ${priority === p.val ? `${p.color} ${p.border} ring-1 ring-white/10` : `text-slate-500 border-transparent hover:bg-white/5`}`}>
-                        <Flag size={12} fill={priority === p.val ? "currentColor" : "none"} strokeWidth={2} />
-                        <span className="text-[10px] font-bold uppercase">{p.val}</span>
-                    </button>
-                ))}
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-2 md:space-y-3 pr-1 [&::-webkit-scrollbar]:hidden">
-             {getSortedTodos().map((task) => (
-                <div key={task._id} className={`flex items-center justify-between p-3 rounded-xl border border-white/5 bg-[#0A0D17]/50 ${task.completed ? 'opacity-50' : ''}`}>
-                   <div className="flex items-center gap-3">
-                      <button onClick={() => toggleComplete(task._id, task.completed)} className={`w-5 h-5 rounded border flex items-center justify-center ${task.completed ? 'bg-[#00E0C7] border-[#00E0C7]' : 'border-gray-600'}`}>{task.completed && <Check size={12} className="text-black" strokeWidth={4} />}</button>
-                      <div className="flex flex-col">
-                        <span className={`text-sm ${task.completed ? 'line-through text-gray-500' : 'text-gray-200'}`}>{task.text}</span>
-                        <div className="flex gap-2 items-center mt-1">
-                           <span className={`text-[10px] uppercase font-bold flex items-center gap-1 ${getPriorityColor(task.priority || 'Medium')}`}><Flag size={8} fill="currentColor" /> {task.priority || 'Medium'}</span>
-                           <span className="text-[10px] text-[#94A3B8] flex items-center gap-1 border-l border-white/10 pl-2"><Calendar size={8} /> {formatDate(task.createdAt || task.date)}</span>
-                        </div>
-                      </div>
-                   </div>
-                   <button onClick={() => handleDeleteTask(task._id)} className="text-gray-600 hover:text-red-400"><Trash2 size={16} /></button>
+      {/* SCROLLABLE CONTENT AREA */}
+      <div className="flex-1 overflow-y-auto page-scroll">
+        <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8 pb-6 md:pb-8">
+            <section className="relative w-full rounded-2xl overflow-hidden p-5 md:p-8 shadow-2xl shadow-[#7F5AF0]/10 border border-white/5">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#7F5AF0] to-[#00E0C7] opacity-10"></div>
+                <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-20 group-hover:opacity-30 transition-opacity duration-700"></div>
+                <div className="relative z-10">
+                <h2 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">{greeting}, {user.name.replace(/[0-9]/g, '').split(' ')[0]}! 👋</h2>
+                <p className="text-[#94A3B8] text-xs md:text-lg">Ready to boost your productivity? You have <span className="text-[#00E0C7] font-bold">{stats.pendingTasks} pending tasks</span> today.</p>
                 </div>
-             ))}
-          </div>
-        </div>
+            </section>
 
-        <div className="lg:col-span-1 space-y-6 flex flex-col min-h-[500px] md:h-[550px]">
-          <div className="flex-1 overflow-hidden"><RecentPDFsList /></div>
-          <div className="flex-1 overflow-hidden"><RecentPodcastsList /></div>
+            {/* 🔧 FIX: Stats Grid - 3 cols on Mobile (Same Row), Reverted to "Previous" Design */}
+            <div className="grid grid-cols-3 gap-2 md:gap-6">
+                {/* PENDING CARD */}
+                <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2">
+                    <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold">PENDING</p>
+                    <h3 className={`text-xl md:text-4xl font-black ${stats.pendingTasks > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.pendingTasks}</h3>
+                    <div className="p-2 bg-[#0A0D17] rounded-lg border border-white/10 text-[#7F5AF0]">
+                        <CheckSquare size={16} className="md:w-6 md:h-6" />
+                    </div>
+                </div>
+
+                {/* PDFS CARD */}
+                <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2">
+                    <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold">PDFS</p>
+                    <h3 className={`text-xl md:text-4xl font-black ${stats.totalPdfs > 0 ? 'text-[#00E0C7]' : 'text-white'}`}>{stats.totalPdfs}</h3>
+                    <div className="p-2 bg-[#0A0D17] rounded-lg border border-white/10 text-[#00E0C7]">
+                        <FileText size={16} className="md:w-6 md:h-6" />
+                    </div>
+                </div>
+
+                {/* PODCASTS CARD */}
+                <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2">
+                    <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold">PODCASTS</p>
+                    <h3 className={`text-xl md:text-4xl font-black ${stats.totalPodcasts > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.totalPodcasts}</h3>
+                    <div className="p-2 bg-[#0A0D17] rounded-lg border border-white/10 text-[#7F5AF0]">
+                        <AudioLines size={16} className="md:w-6 md:h-6" />
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
+                <div className="lg:col-span-2 bg-[#11141D] rounded-2xl border border-white/10 p-5 md:p-6 flex flex-col min-h-[500px] md:h-[550px]">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg md:text-xl font-bold text-white">Recent Tasks</h3>
+                    <Link to="/todo" className="text-sm text-[#7F5AF0] hover:text-[#00E0C7] font-medium">See All</Link>
+                </div>
+                
+                {/* 🔧 FIX: Priority Focus Box */}
+                <div className="relative mb-4 md:mb-6">
+                    <div className="relative mb-3">
+                        <Plus className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
+                        <input type="text" value={newTask} onChange={(e) => setNewTask(e.target.value)} onKeyDown={handleAddTask} placeholder="Add a task..." className="w-full bg-[#0A0D17] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-[#7F5AF0] transition-all placeholder:text-[#94A3B8]/50 shadow-inner" />
+                    </div>
+                    
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                        <span className="text-xs text-gray-500 font-bold uppercase tracking-wider hidden md:block mr-1">Priority:</span>
+                        {[ { val: 'Low', color: 'text-blue-400', border: 'border-blue-400/30 bg-blue-400/10' }, { val: 'Medium', color: 'text-amber-400', border: 'border-amber-400/30 bg-amber-400/10' }, { val: 'High', color: 'text-red-400', border: 'border-red-400/30 bg-red-400/10' } ].map((p) => (
+                            <button key={p.val} onClick={() => setPriority(p.val)} className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-2 py-2 md:px-3 rounded-lg md:rounded-md transition-all border outline-none ${priority === p.val ? `${p.color} ${p.border} ring-1 ring-white/10` : `text-slate-500 border-transparent hover:bg-white/5`}`}>
+                                <Flag size={12} fill={priority === p.val ? "currentColor" : "none"} strokeWidth={2} />
+                                <span className="text-[10px] font-bold uppercase">{p.val}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-2 md:space-y-3 pr-1 [&::-webkit-scrollbar]:hidden">
+                    {todos.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-500 opacity-60">
+                            <Layout size={40} className="mb-2" />
+                            <p className="text-sm">No recent tasks found.</p>
+                        </div>
+                    ) : (
+                        getSortedTodos().map((task) => (
+                            <div key={task._id} className={`flex items-center justify-between p-3 rounded-xl border border-white/5 bg-[#0A0D17]/50 ${task.completed ? 'opacity-50' : ''}`}>
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => toggleComplete(task._id, task.completed)} className={`w-5 h-5 rounded border flex items-center justify-center ${task.completed ? 'bg-[#00E0C7] border-[#00E0C7]' : 'border-gray-600'}`}>{task.completed && <Check size={12} className="text-black" strokeWidth={4} />}</button>
+                                <div className="flex flex-col">
+                                    <span className={`text-sm ${task.completed ? 'line-through text-gray-500' : 'text-gray-200'}`}>{task.text}</span>
+                                    <div className="flex gap-2 items-center mt-1">
+                                    <span className={`text-[10px] uppercase font-bold flex items-center gap-1 ${getPriorityColor(task.priority || 'Medium')}`}><Flag size={8} fill="currentColor" /> {task.priority || 'Medium'}</span>
+                                    <span className="text-[10px] text-[#94A3B8] flex items-center gap-1 border-l border-white/10 pl-2"><Calendar size={8} /> {formatDate(task.createdAt || task.date)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onClick={() => handleDeleteTask(task._id)} className="text-gray-600 hover:text-red-400"><Trash2 size={16} /></button>
+                            </div>
+                        ))
+                    )}
+                </div>
+                </div>
+
+                <div className="lg:col-span-1 space-y-6 flex flex-col min-h-[500px] md:h-[550px]">
+                <div className="flex-1 overflow-hidden"><RecentPDFsList /></div>
+                <div className="flex-1 overflow-hidden"><RecentPodcastsList /></div>
+                </div>
+            </div>
         </div>
       </div>
     </div>
