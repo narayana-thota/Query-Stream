@@ -12,8 +12,9 @@ import {
 
 // --- SUB-COMPONENTS ---
 
+// 🔧 FIX: Added 'min-w-[85vw] md:min-w-0' to make card swipeable on mobile
 const StatsCard = ({ icon, label, value }) => (
-  <div className="bg-[#11141D] p-6 rounded-2xl border border-gray-800 shadow-lg flex items-center gap-5">
+  <div className="bg-[#11141D] p-6 rounded-2xl border border-gray-800 shadow-lg flex items-center gap-5 min-w-[85vw] md:min-w-0 snap-center">
     <div className="p-3 bg-[#0A0D17] rounded-xl border border-gray-800 text-[#7F5AF0]">{icon}</div>
     <div>
       <h3 className="text-3xl font-bold text-white leading-none mb-1">{value}</h3>
@@ -26,7 +27,7 @@ const FilterButton = ({ label, active, onClick }) => (
   <button 
     onClick={onClick} 
     className={`
-      px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200
+      px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap
       ${active 
         ? 'bg-[#7F5AF0] text-white shadow-md' 
         : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -97,7 +98,7 @@ const TaskItem = ({ todo, toggleComplete, handleDelete }) => {
             </span>
             
             {/* Meta Info (Badges) */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mt-1 md:mt-0">
                 {/* Priority Badge */}
                 <div className={`
                   flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border ${styles.badge}
@@ -310,11 +311,12 @@ const TodoListPage = ({ toggleSidebar }) => {
   const progress = totalTasks === 0 ? 0 : Math.round((completedCount / totalTasks) * 100);
   
   return (
-    <div className="min-h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30">
+    // 🔧 FIX: overflow-x-hidden ensures no side scrolling
+    <div className="min-h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 overflow-x-hidden">
       
       {/* HEADER */}
-      <header className="flex items-center justify-between px-8 py-6 bg-[#0A0D17] sticky top-0 z-50 border-b border-gray-800">
-        <div className="flex items-center gap-4">
+      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] sticky top-0 z-50 border-b border-gray-800">
+        <div className="flex items-center gap-3 md:gap-4">
           
           {/* 🔧 FIX: Added Sidebar Menu Button */}
           <button
@@ -324,22 +326,22 @@ const TodoListPage = ({ toggleSidebar }) => {
             <Menu size={24} />
           </button>
 
-          <div className="w-12 h-12 rounded-xl bg-[#7F5AF0]/10 flex items-center justify-center border border-[#7F5AF0]/20 shadow-lg shadow-[#7F5AF0]/5">
-              <CheckSquare size={26} className="text-[#7F5AF0]" />
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#7F5AF0]/10 flex items-center justify-center border border-[#7F5AF0]/20 shadow-lg shadow-[#7F5AF0]/5">
+              <CheckSquare size={22} className="text-[#7F5AF0] md:w-[26px] md:h-[26px]" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">
+          <h1 className="text-xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">
             To-Do List
           </h1>
         </div>
 
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3 pl-6 border-l border-gray-800">
-            {/* 🔧 FIX 2: Details Visible on Mobile (removed hidden md:block) */}
+          <div className="flex items-center gap-3 pl-3 md:pl-6 border-l border-gray-800">
+            {/* 🔧 FIX 2: Details Visible on Mobile */}
             <div className="text-right">
-              <p className="text-sm font-bold text-white leading-tight">{user.name}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
+              <p className="text-xs md:text-sm font-bold text-white leading-tight">{user.name}</p>
+              <p className="text-[10px] md:text-xs text-gray-500">{user.email}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-white text-sm font-bold shadow-lg ring-2 ring-[#0A0D17]">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-white text-xs md:text-sm font-bold shadow-lg ring-2 ring-[#0A0D17]">
               {user.initials}
             </div>
           </div>
@@ -347,11 +349,11 @@ const TodoListPage = ({ toggleSidebar }) => {
       </header>
 
       {/* CONTENT AREA */}
-      <div className="px-4 md:px-8 pb-8">
-        <div className="max-w-7xl mx-auto space-y-8 mt-6">
+      <div className="px-4 md:px-8 pb-20 md:pb-8">
+        <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 mt-4 md:mt-6">
           
-          {/* Stats Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* 🔧 FIX: Stats Row - Horizontal Scroll on Mobile (Instagram Story Style) */}
+          <div className="flex flex-nowrap overflow-x-auto gap-3 pb-2 md:grid md:grid-cols-4 md:gap-6 md:pb-0 scrollbar-hide snap-x snap-mandatory">
             <StatsCard icon={<ListTodo size={24} />} label="Total Tasks" value={totalTasks} />
             <StatsCard icon={<Clock size={24} className="text-yellow-500" />} label="Remaining" value={remainingTasks} />
             <StatsCard icon={<CheckSquare size={24} className="text-[#00E0C7]" />} label="Completed" value={completedCount} />
@@ -362,8 +364,8 @@ const TodoListPage = ({ toggleSidebar }) => {
           <div className="bg-[#11141D] border border-gray-800 rounded-3xl p-4 md:p-8 shadow-2xl min-h-[500px] flex flex-col relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7F5AF0] via-[#00E0C7] to-[#7F5AF0] opacity-60"></div>
 
-            {/* 🔧 FIX 3: Horizontal Layout for Add Task on Mobile (flex gap-3) */}
-            <form onSubmit={handleAddTask} className="relative mb-8 mt-2 flex gap-3">
+            {/* 🔧 FIX 3: Stacked Input on Mobile (flex-col) */}
+            <form onSubmit={handleAddTask} className="relative mb-6 md:mb-8 mt-2 flex flex-col md:flex-row gap-3">
               
               <div className="relative flex-1 group">
                 <input
@@ -371,16 +373,16 @@ const TodoListPage = ({ toggleSidebar }) => {
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
                   placeholder="What needs to be done?"
-                  className="w-full h-14 bg-[#0A0D17] border border-gray-800 rounded-xl px-5 text-base text-white placeholder-gray-500 focus:outline-none focus:border-[#7F5AF0] focus:ring-1 focus:ring-[#7F5AF0] transition-all min-w-0"
+                  className="w-full h-12 md:h-14 bg-[#0A0D17] border border-gray-800 rounded-xl px-5 text-base text-white placeholder-gray-500 focus:outline-none focus:border-[#7F5AF0] focus:ring-1 focus:ring-[#7F5AF0] transition-all min-w-0"
                 />
               </div>
               
               {/* PRIORITY SELECTOR */}
-              <div className="relative w-28 md:w-48 group flex-shrink-0">
+              <div className="relative w-full md:w-48 group flex-shrink-0">
                 <select
                   value={newPriority}
                   onChange={(e) => setNewPriority(e.target.value)}
-                  className="w-full h-14 bg-[#0A0D17] border border-gray-800 rounded-xl pl-3 pr-2 md:pl-5 md:pr-10 text-sm md:text-base text-gray-300 focus:outline-none focus:border-[#7F5AF0] appearance-none cursor-pointer hover:border-gray-600 transition-colors text-center md:text-left"
+                  className="w-full h-12 md:h-14 bg-[#0A0D17] border border-gray-800 rounded-xl pl-3 pr-2 md:pl-5 md:pr-10 text-sm md:text-base text-gray-300 focus:outline-none focus:border-[#7F5AF0] appearance-none cursor-pointer hover:border-gray-600 transition-colors text-center md:text-left"
                 >
                   <option value="High">High</option>
                   <option value="Medium">Medium</option>
@@ -393,7 +395,7 @@ const TodoListPage = ({ toggleSidebar }) => {
 
               <button 
                 type="submit" 
-                className="h-14 w-14 md:w-auto md:px-8 bg-[#7F5AF0] hover:bg-[#6941c6] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#7F5AF0]/20 transition-all active:scale-95 group flex-shrink-0"
+                className="h-12 md:h-14 w-full md:w-auto md:px-8 bg-[#7F5AF0] hover:bg-[#6941c6] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#7F5AF0]/20 transition-all active:scale-95 group flex-shrink-0"
               >
                 <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
                 <span className="hidden md:block ml-2 font-medium">Add</span>
@@ -415,7 +417,7 @@ const TodoListPage = ({ toggleSidebar }) => {
             </div>
 
             {/* GROUPED LIST */}
-            <div className="flex-1 space-y-6">
+            <div className="flex-1 space-y-4 md:space-y-6">
               {loading ? (
                 <div className="flex items-center justify-center h-48 text-gray-500 opacity-60">
                     <Loader size={32} className="animate-spin text-[#7F5AF0]" />

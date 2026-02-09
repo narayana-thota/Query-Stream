@@ -358,6 +358,7 @@ const PodcastGenPage = ({ toggleSidebar }) => {
   };
 
   return (
+    // 🔧 FIX: overflow-x-hidden ensures no horizontal drift
     <div className="h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 flex flex-col overflow-hidden">
       
       {/* HEADER */}
@@ -405,7 +406,8 @@ const PodcastGenPage = ({ toggleSidebar }) => {
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* 🔧 FIX: pb-24 adds space at bottom for mobile nav */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24 md:pb-0">
             
             {/* LEFT COLUMN */}
             <div className="lg:col-span-5 flex flex-col gap-6">

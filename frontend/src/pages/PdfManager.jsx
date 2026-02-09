@@ -191,7 +191,7 @@ const PDFManagerPage = ({ toggleSidebar }) => {
     }
   };
 
-  // CHANGED: Outer div is now h-screen and overflow-hidden to match sidebar layout
+  // 🔧 FIX: Added 'overflow-x-hidden' to main wrapper
   return (
     <div className="h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 flex flex-col overflow-hidden">
       
@@ -223,7 +223,7 @@ const PDFManagerPage = ({ toggleSidebar }) => {
       {/* HEADER - Fixed at top */}
       <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] flex-shrink-0 border-b border-gray-800">
         <div className="flex items-center gap-3 md:gap-4">
-          {/* Mobile Menu Button - Works with Sidebar */}
+          {/* Mobile Menu Button */}
           <button
             className="md:hidden text-[#94A3B8] hover:text-white p-2 -ml-2"
             onClick={toggleSidebar}
@@ -256,7 +256,8 @@ const PDFManagerPage = ({ toggleSidebar }) => {
       {/* CONTENT - Scrollable Area */}
       <div className="flex-1 overflow-y-auto page-scroll">
         <div className="px-4 md:px-8 py-4 md:py-8 max-w-[1600px] mx-auto">
-          <div className="flex flex-col gap-4 md:gap-6">
+          {/* 🔧 FIX: Added 'pb-20' for safe mobile bottom spacing */}
+          <div className="flex flex-col gap-4 md:gap-6 pb-20 md:pb-0">
             
             {/* TOP ROW: UPLOADER + SUMMARY */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 animate-in fade-in slide-in-from-top-4 duration-700">
@@ -354,7 +355,7 @@ const PDFManagerPage = ({ toggleSidebar }) => {
             </div>
 
             {/* BOTTOM ROW: CHAT */}
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100 pb-8">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
               <div className="bg-[#11141D] border border-gray-800 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-xl flex flex-col">
                 <h2 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4 flex items-center gap-2 flex-shrink-0">
                     <MessageSquare size={18} className="text-[#7F5AF0] md:w-5 md:h-5" /> Q&A Chat

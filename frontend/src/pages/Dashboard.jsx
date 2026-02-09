@@ -356,7 +356,8 @@ const Dashboard = ({ toggleSidebar }) => {
   );
 
   return (
-    <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8 pb-24 md:pb-8">
+    // 🔧 FIX: overflow-x-hidden ensures no horizontal page scroll
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8 pb-24 md:pb-8 overflow-x-hidden">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
              <button className="md:hidden text-[#94A3B8] hover:text-white p-1" onClick={toggleSidebar}><Menu size={24} /></button>
@@ -382,22 +383,26 @@ const Dashboard = ({ toggleSidebar }) => {
         </div>
       </section>
 
-      <div className="grid grid-cols-3 gap-3 md:gap-6">
-         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] p-3 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#7F5AF0]/10">
+      {/* 🔧 FIX: Stats Grid
+          - Mobile: Flex row with horizontal scrolling (Like Instagram Stories) to prevent stacking.
+          - Desktop: Standard 3-column grid.
+      */}
+      <div className="flex flex-nowrap overflow-x-auto gap-3 pb-4 md:grid md:grid-cols-3 md:gap-6 md:pb-0 snap-x snap-mandatory scrollbar-hide">
+         <div className="min-w-[85vw] md:min-w-0 snap-center relative overflow-hidden rounded-xl md:rounded-[20px] p-3 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#7F5AF0]/10">
             <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
             <div className="relative z-10 flex items-center justify-between h-full">
                 <div className="flex flex-col items-center justify-center w-full md:items-start md:w-auto"><p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-1">PENDING TASKS</p><h3 className={`text-xl md:text-5xl font-black ${stats.pendingTasks > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.pendingTasks}</h3></div>
                 <div className="flex w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-[#1F2937] items-center justify-center text-[#7F5AF0] shrink-0 border border-white/5 shadow-inner transition-all duration-300 group-hover:bg-[#7F5AF0] group-hover:text-white group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(127,90,240,0.6)]"><CheckSquare size={20} className="md:w-6 md:h-6" /></div>
             </div>
          </div>
-         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] p-3 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#00E0C7]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#00E0C7]/10">
+         <div className="min-w-[85vw] md:min-w-0 snap-center relative overflow-hidden rounded-xl md:rounded-[20px] p-3 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#00E0C7]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#00E0C7]/10">
             <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#00E0C7] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
             <div className="relative z-10 flex items-center justify-between h-full">
                 <div className="flex flex-col items-center justify-center w-full md:items-start md:w-auto"><p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-1">PDFS UPLOADED</p><h3 className={`text-xl md:text-5xl font-black ${stats.totalPdfs > 0 ? 'text-[#00E0C7]' : 'text-white'}`}>{stats.totalPdfs}</h3></div>
                 <div className="flex w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-[#1F2937] items-center justify-center text-[#00E0C7] shrink-0 border border-white/5 shadow-inner transition-all duration-300 group-hover:bg-[#00E0C7] group-hover:text-[#0A0D17] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(0,224,199,0.6)]"><FileText size={20} className="md:w-6 md:h-6" /></div>
             </div>
          </div>
-         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] p-3 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#7F5AF0]/10">
+         <div className="min-w-[85vw] md:min-w-0 snap-center relative overflow-hidden rounded-xl md:rounded-[20px] p-3 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#7F5AF0]/10">
              <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
              <div className="relative z-10 flex items-center justify-between h-full">
                 <div className="flex flex-col items-center justify-center w-full md:items-start md:w-auto"><p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-1">PODCASTS</p><h3 className={`text-xl md:text-5xl font-black ${stats.totalPodcasts > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.totalPodcasts}</h3></div>
