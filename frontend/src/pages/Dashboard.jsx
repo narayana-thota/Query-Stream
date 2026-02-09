@@ -98,7 +98,7 @@ const Dashboard = ({ toggleSidebar }) => {
     });
   };
 
-  // ✅ AUTH HELPER
+  // AUTH HELPER
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
     return { 
@@ -340,20 +340,20 @@ const Dashboard = ({ toggleSidebar }) => {
   );
 
   return (
-    // 🔧 FIX: overflow-x-hidden, reduced bottom padding (pb-6 instead of pb-24)
+    // 🔧 FIX: overflow-x-hidden, reduced bottom padding (pb-6), consistent gaps
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8 pb-6 md:pb-8 overflow-x-hidden min-h-screen">
       
-      {/* HEADER FIX: Profile right alignment & overflow handling */}
-      <header className="flex items-center justify-between w-full">
+      {/* HEADER: Constant, Profile Fixed (Email Hidden on Mobile) */}
+      <header className="flex items-center justify-between sticky top-0 z-50 bg-[#0A0D17]/80 backdrop-blur-md py-4 -mx-4 px-4 md:mx-0 md:px-0 md:bg-transparent md:static">
         <div className="flex items-center gap-3">
              <button className="md:hidden text-[#94A3B8] hover:text-white p-1" onClick={toggleSidebar}><Menu size={24} /></button>
             <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">Dashboard</h1>
         </div>
-        <div className="flex items-center gap-4 md:gap-6 shrink-0">
+        <div className="flex items-center gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end">
-              {/* Hide email on mobile to prevent overflow/cutoff */}
-              <span className="text-sm font-bold text-white leading-none">{user.name.replace(/[0-9]/g, '')}</span>
+              <span className="text-sm font-bold text-white leading-none truncate max-w-[100px] md:max-w-none">{user.name.replace(/[0-9]/g, '')}</span>
+              {/* 🔧 FIX: Hide email on mobile to save space/prevent cut off */}
               <span className="text-[11px] text-[#94A3B8] font-medium mt-1 hidden sm:block">{user.email}</span>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-sm font-bold text-white shadow-lg shrink-0">{user.initials}</div>
@@ -370,36 +370,38 @@ const Dashboard = ({ toggleSidebar }) => {
         </div>
       </section>
 
-      {/* 🔧 FIX: Stats Cards - 3 columns on mobile, fixed row, no scroll. Smaller padding (p-3) to fit. */}
-      <div className="grid grid-cols-3 gap-2 md:gap-6">
-         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] p-2 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300">
-            <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between h-full gap-2 md:gap-0">
-                <div className="flex flex-col items-center md:items-start justify-center w-full md:w-auto">
-                    <p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-0.5 text-center md:text-left">PENDING</p>
-                    <h3 className={`text-xl md:text-5xl font-black ${stats.pendingTasks > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.pendingTasks}</h3>
-                </div>
-                <div className="flex w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-[#1F2937] items-center justify-center text-[#7F5AF0] shrink-0 border border-white/5 shadow-inner"><CheckSquare size={16} className="md:w-6 md:h-6" /></div>
+      {/* 🔧 FIX: Stats Grid - 3 cols on Mobile (Same Row), Vertical Layout inside Card */}
+      <div className="grid grid-cols-3 gap-3 md:gap-6">
+         {/* PENDING CARD */}
+         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] bg-[#11141D] border border-white/5 group transition-all duration-300 flex flex-col items-center justify-center py-4 md:py-6 gap-2">
+            <div className="absolute inset-0 bg-[#7F5AF0]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold z-10">PENDING</p>
+            <h3 className={`text-2xl md:text-5xl font-black z-10 ${stats.pendingTasks > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.pendingTasks}</h3>
+            {/* 🔧 FIX: Glassmorphism Icon Box */}
+            <div className="mt-1 p-2 rounded-lg bg-[#1F2937]/80 backdrop-blur-md border border-white/10 text-[#7F5AF0] shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform z-10">
+               <CheckSquare size={18} className="md:w-6 md:h-6" />
             </div>
          </div>
-         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] p-2 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#00E0C7]/50 transition-all duration-300">
-            <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#00E0C7] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between h-full gap-2 md:gap-0">
-                <div className="flex flex-col items-center md:items-start justify-center w-full md:w-auto">
-                    <p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-0.5 text-center md:text-left">PDFS</p>
-                    <h3 className={`text-xl md:text-5xl font-black ${stats.totalPdfs > 0 ? 'text-[#00E0C7]' : 'text-white'}`}>{stats.totalPdfs}</h3>
-                </div>
-                <div className="flex w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-[#1F2937] items-center justify-center text-[#00E0C7] shrink-0 border border-white/5 shadow-inner"><FileText size={16} className="md:w-6 md:h-6" /></div>
+
+         {/* PDFS CARD */}
+         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] bg-[#11141D] border border-white/5 group transition-all duration-300 flex flex-col items-center justify-center py-4 md:py-6 gap-2">
+            <div className="absolute inset-0 bg-[#00E0C7]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold z-10">PDFS</p>
+            <h3 className={`text-2xl md:text-5xl font-black z-10 ${stats.totalPdfs > 0 ? 'text-[#00E0C7]' : 'text-white'}`}>{stats.totalPdfs}</h3>
+            {/* 🔧 FIX: Glassmorphism Icon Box */}
+            <div className="mt-1 p-2 rounded-lg bg-[#1F2937]/80 backdrop-blur-md border border-white/10 text-[#00E0C7] shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform z-10">
+               <FileText size={18} className="md:w-6 md:h-6" />
             </div>
          </div>
-         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] p-2 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300">
-             <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between h-full gap-2 md:gap-0">
-                <div className="flex flex-col items-center md:items-start justify-center w-full md:w-auto">
-                    <p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-0.5 text-center md:text-left">PODCASTS</p>
-                    <h3 className={`text-xl md:text-5xl font-black ${stats.totalPodcasts > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.totalPodcasts}</h3>
-                </div>
-                <div className="flex w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-[#1F2937] items-center justify-center text-[#7F5AF0] shrink-0 border border-white/5 shadow-inner"><AudioLines size={16} className="md:w-6 md:h-6" /></div>
+
+         {/* PODCASTS CARD */}
+         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] bg-[#11141D] border border-white/5 group transition-all duration-300 flex flex-col items-center justify-center py-4 md:py-6 gap-2">
+             <div className="absolute inset-0 bg-[#7F5AF0]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+             <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold z-10">PODCASTS</p>
+             <h3 className={`text-2xl md:text-5xl font-black z-10 ${stats.totalPodcasts > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.totalPodcasts}</h3>
+             {/* 🔧 FIX: Glassmorphism Icon Box */}
+             <div className="mt-1 p-2 rounded-lg bg-[#1F2937]/80 backdrop-blur-md border border-white/10 text-[#7F5AF0] shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform z-10">
+               <AudioLines size={18} className="md:w-6 md:h-6" />
              </div>
          </div>
       </div>
@@ -411,22 +413,25 @@ const Dashboard = ({ toggleSidebar }) => {
             <Link to="/todo" className="text-sm text-[#7F5AF0] hover:text-[#00E0C7] font-medium">See All</Link>
           </div>
           
-          {/* 🔧 FIX: Priority Focus Box - Added 'overflow-hidden' and 'ring' adjustment */}
+          {/* 🔧 FIX: Priority Focus Box - Added 'overflow-hidden' and adjusted gaps */}
           <div className="relative mb-4 md:mb-6">
-            <div className="relative">
+            <div className="relative mb-3">
                 <Plus className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
-                <input type="text" value={newTask} onChange={(e) => setNewTask(e.target.value)} onKeyDown={handleAddTask} placeholder="Add a task..." className="w-full bg-[#0A0D17] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 md:pr-32 text-white focus:outline-none focus:border-[#7F5AF0] transition-all placeholder:text-[#94A3B8]/50 shadow-inner" />
+                <input type="text" value={newTask} onChange={(e) => setNewTask(e.target.value)} onKeyDown={handleAddTask} placeholder="Add a task..." className="w-full bg-[#0A0D17] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-[#7F5AF0] transition-all placeholder:text-[#94A3B8]/50 shadow-inner" />
             </div>
-            <div className="mt-3 md:mt-0 md:absolute md:right-2 md:top-1/2 md:-translate-y-1/2 flex items-center gap-2 md:gap-1 bg-transparent md:bg-[#11141D]/50 md:p-1 rounded-lg justify-start overflow-hidden">
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider md:hidden mr-1">Priority:</span>
+            
+            {/* Priority Buttons Row */}
+            <div className="flex items-center gap-2 overflow-hidden">
+                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider hidden md:block mr-1">Priority:</span>
                 {[ { val: 'Low', color: 'text-blue-400', border: 'border-blue-400/30 bg-blue-400/10' }, { val: 'Medium', color: 'text-amber-400', border: 'border-amber-400/30 bg-amber-400/10' }, { val: 'High', color: 'text-red-400', border: 'border-red-400/30 bg-red-400/10' } ].map((p) => (
-                    <button key={p.val} onClick={() => setPriority(p.val)} className={`flex items-center gap-1.5 px-3 py-1.5 md:px-2 md:py-1 rounded-lg md:rounded-md transition-all border ${priority === p.val ? `${p.color} ${p.border} ring-1 ring-white/10` : `text-slate-500 border-transparent hover:bg-white/5`}`}>
+                    <button key={p.val} onClick={() => setPriority(p.val)} className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-2 py-2 md:px-3 rounded-lg md:rounded-md transition-all border ${priority === p.val ? `${p.color} ${p.border} ring-1 ring-white/10` : `text-slate-500 border-transparent hover:bg-white/5`}`}>
                         <Flag size={12} fill={priority === p.val ? "currentColor" : "none"} strokeWidth={2} />
-                        <span className="text-[10px] md:hidden lg:inline font-bold uppercase">{p.val}</span>
+                        <span className="text-[10px] font-bold uppercase">{p.val}</span>
                     </button>
                 ))}
             </div>
           </div>
+
           <div className="flex-1 overflow-y-auto space-y-2 md:space-y-3 pr-1 [&::-webkit-scrollbar]:hidden">
              {getSortedTodos().map((task) => (
                 <div key={task._id} className={`flex items-center justify-between p-3 rounded-xl border border-white/5 bg-[#0A0D17]/50 ${task.completed ? 'opacity-50' : ''}`}>
