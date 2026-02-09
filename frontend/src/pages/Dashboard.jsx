@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import API_BASE_URL from '../config'; // ✅ IMPORTED CONFIG
+import API_BASE_URL from '../config'; 
 import {
   CheckSquare, FileText, Plus,
   Trash2, Check, Play, AudioLines, Clock,
@@ -98,7 +98,7 @@ const Dashboard = ({ toggleSidebar }) => {
     });
   };
 
-  // ✅ AUTH HELPER: Get Header with Token
+  // ✅ AUTH HELPER
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
     return { 
@@ -121,7 +121,6 @@ const Dashboard = ({ toggleSidebar }) => {
           initials: getInitials(storedName || 'User')
         });
 
-        // FETCH TODOS (✅ Uses Token)
         const todoRes = await axios.get(`${API_BASE_URL}/api/todos`, getAuthHeader());
         const todosWithDates = todoRes.data.map(t => ({
             ...t, 
@@ -129,7 +128,6 @@ const Dashboard = ({ toggleSidebar }) => {
         }));
         setTodos(todosWithDates);
 
-        // FETCH PDFS (✅ Uses Token)
         const pdfRes = await axios.get(`${API_BASE_URL}/api/pdf`, getAuthHeader());
         const pdfData = Array.isArray(pdfRes.data) ? pdfRes.data : []; 
         const processedPdfs = pdfData.map(p => ({
@@ -138,7 +136,6 @@ const Dashboard = ({ toggleSidebar }) => {
         }));
         setRecentPdfs(processedPdfs); 
 
-        // FETCH PODCASTS (✅ Uses Token)
         try {
             const podcastRes = await axios.get(`${API_BASE_URL}/api/podcast`, getAuthHeader());
             const podcastData = Array.isArray(podcastRes.data) ? podcastRes.data : [];
@@ -146,10 +143,7 @@ const Dashboard = ({ toggleSidebar }) => {
                 ...p,
                 date: p.createdAt || p.date || new Date().toISOString()
             }));
-            
-            // Sort by date newest first
             processedPodcasts.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
             setRecentPodcasts(processedPodcasts); 
             setStats(prev => ({ ...prev, totalPodcasts: podcastData.length }));
         } catch (e) { console.log("Podcasts API silent fail"); }
@@ -171,7 +165,6 @@ const Dashboard = ({ toggleSidebar }) => {
     if (e.key === 'Enter' && newTask.trim()) {
       try {
         const now = new Date().toISOString();
-        // ✅ Uses Token
         const res = await axios.post(`${API_BASE_URL}/api/todos`, 
           { text: newTask, completed: false, priority: priority, createdAt: now },
           getAuthHeader()
@@ -185,7 +178,6 @@ const Dashboard = ({ toggleSidebar }) => {
 
   const handleDeleteTask = async (id) => {
     try {
-      // ✅ Uses Token
       await axios.delete(`${API_BASE_URL}/api/todos/${id}`, getAuthHeader());
       const newTodos = todos.filter(task => task._id !== id);
       setTodos(newTodos);
@@ -198,12 +190,10 @@ const Dashboard = ({ toggleSidebar }) => {
       const newTodos = todos.map(t => t._id === id ? { ...t, completed: !currentStatus } : t);
       setTodos(newTodos);
       setStats(prev => ({ ...prev, pendingTasks: newTodos.filter(t => !t.completed).length }));
-      // ✅ Uses Token
       await axios.put(`${API_BASE_URL}/api/todos/${id}`, { completed: !currentStatus }, getAuthHeader());
     } catch (error) { console.error(error); }
   };
 
-  // PDF Handlers
   const handlePdfUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -211,11 +201,10 @@ const Dashboard = ({ toggleSidebar }) => {
     const formData = new FormData();
     formData.append('pdf', file);
     try {
-        // ✅ Uses Token (Special Header for Multipart)
         const res = await axios.post(`${API_BASE_URL}/api/pdf/upload`, formData, {
             headers: { 
                 'Content-Type': 'multipart/form-data',
-                'x-auth-token': localStorage.getItem('token') // Manually adding token here
+                'x-auth-token': localStorage.getItem('token') 
             },
             withCredentials: true
         });
@@ -231,7 +220,6 @@ const Dashboard = ({ toggleSidebar }) => {
   const handleDeletePdf = async (e, id) => {
       e.preventDefault(); e.stopPropagation(); 
       try {
-          // ✅ Uses Token
           await axios.delete(`${API_BASE_URL}/api/pdf/${id}`, getAuthHeader());
           setRecentPdfs(recentPdfs.filter(p => (p._id || p.id) !== id));
           setStats(prev => ({...prev, totalPdfs: prev.totalPdfs - 1}));
@@ -242,7 +230,6 @@ const Dashboard = ({ toggleSidebar }) => {
   const handleDeletePodcast = async (e, id) => {
       e.preventDefault(); e.stopPropagation();
       try {
-          // ✅ Uses Token
           await axios.delete(`${API_BASE_URL}/api/podcast/${id}`, getAuthHeader());
           setRecentPodcasts(recentPodcasts.filter(p => (p._id || p.id) !== id));
           setStats(prev => ({...prev, totalPodcasts: prev.totalPodcasts - 1}));
@@ -255,8 +242,6 @@ const Dashboard = ({ toggleSidebar }) => {
   };
 
   // --- SUB-COMPONENTS ---
-  
-  // 1. RECENT PDFs LIST
   const RecentPDFsList = () => (
     <div className="bg-[#11141D] rounded-2xl border border-white/10 p-6 flex flex-col h-full animate-in fade-in duration-500 relative overflow-hidden group hover:border-[#00E0C7]/50 transition-all duration-300">
         <input type="file" ref={fileInputRef} onChange={handlePdfUpload} accept="application/pdf" className="hidden" />
@@ -308,7 +293,6 @@ const Dashboard = ({ toggleSidebar }) => {
     </div>
   );
 
-  // 2. RECENT PODCASTS LIST (Unified to match PDF List Style)
   const RecentPodcastsList = () => (
     <div className="bg-[#11141D] rounded-2xl border border-white/10 p-6 flex flex-col h-full animate-in fade-in duration-500 relative overflow-hidden group hover:border-[#7F5AF0]/50 transition-all duration-300">
       <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
@@ -356,20 +340,23 @@ const Dashboard = ({ toggleSidebar }) => {
   );
 
   return (
-    // 🔧 FIX: overflow-x-hidden ensures no horizontal page scroll
-    <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8 pb-24 md:pb-8 overflow-x-hidden">
-      <header className="flex items-center justify-between">
+    // 🔧 FIX: overflow-x-hidden, reduced bottom padding (pb-6 instead of pb-24)
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8 pb-6 md:pb-8 overflow-x-hidden min-h-screen">
+      
+      {/* HEADER FIX: Profile right alignment & overflow handling */}
+      <header className="flex items-center justify-between w-full">
         <div className="flex items-center gap-3">
              <button className="md:hidden text-[#94A3B8] hover:text-white p-1" onClick={toggleSidebar}><Menu size={24} /></button>
             <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">Dashboard</h1>
         </div>
-        <div className="flex items-center gap-4 md:gap-6">
+        <div className="flex items-center gap-4 md:gap-6 shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end">
+              {/* Hide email on mobile to prevent overflow/cutoff */}
               <span className="text-sm font-bold text-white leading-none">{user.name.replace(/[0-9]/g, '')}</span>
-              <span className="text-[11px] text-[#94A3B8] font-medium mt-1">{user.email}</span>
+              <span className="text-[11px] text-[#94A3B8] font-medium mt-1 hidden sm:block">{user.email}</span>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-sm font-bold text-white shadow-lg">{user.initials}</div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-sm font-bold text-white shadow-lg shrink-0">{user.initials}</div>
           </div>
         </div>
       </header>
@@ -383,30 +370,36 @@ const Dashboard = ({ toggleSidebar }) => {
         </div>
       </section>
 
-      {/* 🔧 FIX: Stats Grid
-          - Mobile: Flex row with horizontal scrolling (Like Instagram Stories) to prevent stacking.
-          - Desktop: Standard 3-column grid.
-      */}
-      <div className="flex flex-nowrap overflow-x-auto gap-3 pb-4 md:grid md:grid-cols-3 md:gap-6 md:pb-0 snap-x snap-mandatory scrollbar-hide">
-         <div className="min-w-[85vw] md:min-w-0 snap-center relative overflow-hidden rounded-xl md:rounded-[20px] p-3 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#7F5AF0]/10">
+      {/* 🔧 FIX: Stats Cards - 3 columns on mobile, fixed row, no scroll. Smaller padding (p-3) to fit. */}
+      <div className="grid grid-cols-3 gap-2 md:gap-6">
+         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] p-2 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300">
             <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-            <div className="relative z-10 flex items-center justify-between h-full">
-                <div className="flex flex-col items-center justify-center w-full md:items-start md:w-auto"><p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-1">PENDING TASKS</p><h3 className={`text-xl md:text-5xl font-black ${stats.pendingTasks > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.pendingTasks}</h3></div>
-                <div className="flex w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-[#1F2937] items-center justify-center text-[#7F5AF0] shrink-0 border border-white/5 shadow-inner transition-all duration-300 group-hover:bg-[#7F5AF0] group-hover:text-white group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(127,90,240,0.6)]"><CheckSquare size={20} className="md:w-6 md:h-6" /></div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between h-full gap-2 md:gap-0">
+                <div className="flex flex-col items-center md:items-start justify-center w-full md:w-auto">
+                    <p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-0.5 text-center md:text-left">PENDING</p>
+                    <h3 className={`text-xl md:text-5xl font-black ${stats.pendingTasks > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.pendingTasks}</h3>
+                </div>
+                <div className="flex w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-[#1F2937] items-center justify-center text-[#7F5AF0] shrink-0 border border-white/5 shadow-inner"><CheckSquare size={16} className="md:w-6 md:h-6" /></div>
             </div>
          </div>
-         <div className="min-w-[85vw] md:min-w-0 snap-center relative overflow-hidden rounded-xl md:rounded-[20px] p-3 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#00E0C7]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#00E0C7]/10">
+         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] p-2 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#00E0C7]/50 transition-all duration-300">
             <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#00E0C7] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-            <div className="relative z-10 flex items-center justify-between h-full">
-                <div className="flex flex-col items-center justify-center w-full md:items-start md:w-auto"><p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-1">PDFS UPLOADED</p><h3 className={`text-xl md:text-5xl font-black ${stats.totalPdfs > 0 ? 'text-[#00E0C7]' : 'text-white'}`}>{stats.totalPdfs}</h3></div>
-                <div className="flex w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-[#1F2937] items-center justify-center text-[#00E0C7] shrink-0 border border-white/5 shadow-inner transition-all duration-300 group-hover:bg-[#00E0C7] group-hover:text-[#0A0D17] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(0,224,199,0.6)]"><FileText size={20} className="md:w-6 md:h-6" /></div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between h-full gap-2 md:gap-0">
+                <div className="flex flex-col items-center md:items-start justify-center w-full md:w-auto">
+                    <p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-0.5 text-center md:text-left">PDFS</p>
+                    <h3 className={`text-xl md:text-5xl font-black ${stats.totalPdfs > 0 ? 'text-[#00E0C7]' : 'text-white'}`}>{stats.totalPdfs}</h3>
+                </div>
+                <div className="flex w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-[#1F2937] items-center justify-center text-[#00E0C7] shrink-0 border border-white/5 shadow-inner"><FileText size={16} className="md:w-6 md:h-6" /></div>
             </div>
          </div>
-         <div className="min-w-[85vw] md:min-w-0 snap-center relative overflow-hidden rounded-xl md:rounded-[20px] p-3 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#7F5AF0]/10">
+         <div className="relative overflow-hidden rounded-xl md:rounded-[20px] p-2 md:p-6 bg-[#11141D] border border-white/5 group hover:border-[#7F5AF0]/50 transition-all duration-300">
              <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-             <div className="relative z-10 flex items-center justify-between h-full">
-                <div className="flex flex-col items-center justify-center w-full md:items-start md:w-auto"><p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-1">PODCASTS</p><h3 className={`text-xl md:text-5xl font-black ${stats.totalPodcasts > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.totalPodcasts}</h3></div>
-                <div className="flex w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-[#1F2937] items-center justify-center text-[#7F5AF0] shrink-0 border border-white/5 shadow-inner transition-all duration-300 group-hover:bg-[#7F5AF0] group-hover:text-white group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(127,90,240,0.6)]"><AudioLines size={20} className="md:w-6 md:h-6" /></div>
+             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between h-full gap-2 md:gap-0">
+                <div className="flex flex-col items-center md:items-start justify-center w-full md:w-auto">
+                    <p className="text-[#94A3B8] text-[8px] md:text-xs uppercase tracking-widest mb-0.5 text-center md:text-left">PODCASTS</p>
+                    <h3 className={`text-xl md:text-5xl font-black ${stats.totalPodcasts > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.totalPodcasts}</h3>
+                </div>
+                <div className="flex w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-[#1F2937] items-center justify-center text-[#7F5AF0] shrink-0 border border-white/5 shadow-inner"><AudioLines size={16} className="md:w-6 md:h-6" /></div>
              </div>
          </div>
       </div>
@@ -417,12 +410,14 @@ const Dashboard = ({ toggleSidebar }) => {
             <h3 className="text-lg md:text-xl font-bold text-white">Recent Tasks</h3>
             <Link to="/todo" className="text-sm text-[#7F5AF0] hover:text-[#00E0C7] font-medium">See All</Link>
           </div>
+          
+          {/* 🔧 FIX: Priority Focus Box - Added 'overflow-hidden' and 'ring' adjustment */}
           <div className="relative mb-4 md:mb-6">
             <div className="relative">
                 <Plus className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
                 <input type="text" value={newTask} onChange={(e) => setNewTask(e.target.value)} onKeyDown={handleAddTask} placeholder="Add a task..." className="w-full bg-[#0A0D17] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 md:pr-32 text-white focus:outline-none focus:border-[#7F5AF0] transition-all placeholder:text-[#94A3B8]/50 shadow-inner" />
             </div>
-            <div className="mt-3 md:mt-0 md:absolute md:right-2 md:top-1/2 md:-translate-y-1/2 flex items-center gap-2 md:gap-1 bg-transparent md:bg-[#11141D]/50 md:p-1 rounded-lg justify-start">
+            <div className="mt-3 md:mt-0 md:absolute md:right-2 md:top-1/2 md:-translate-y-1/2 flex items-center gap-2 md:gap-1 bg-transparent md:bg-[#11141D]/50 md:p-1 rounded-lg justify-start overflow-hidden">
                 <span className="text-xs text-gray-500 font-bold uppercase tracking-wider md:hidden mr-1">Priority:</span>
                 {[ { val: 'Low', color: 'text-blue-400', border: 'border-blue-400/30 bg-blue-400/10' }, { val: 'Medium', color: 'text-amber-400', border: 'border-amber-400/30 bg-amber-400/10' }, { val: 'High', color: 'text-red-400', border: 'border-red-400/30 bg-red-400/10' } ].map((p) => (
                     <button key={p.val} onClick={() => setPriority(p.val)} className={`flex items-center gap-1.5 px-3 py-1.5 md:px-2 md:py-1 rounded-lg md:rounded-md transition-all border ${priority === p.val ? `${p.color} ${p.border} ring-1 ring-white/10` : `text-slate-500 border-transparent hover:bg-white/5`}`}>
