@@ -17,8 +17,13 @@ const LoginPage = () => {
   const formRef = useRef(null); 
   const resetTimer = useRef(null);
 
-  // --- ANIMATION LOGIC (Tuned for stability) ---
+  // --- ANIMATION LOGIC (OPTIMIZED) ---
   useEffect(() => {
+    // 🚀 EXPERT FIX: Only enable heavy mouse tracking on Desktop (>768px).
+    // This prevents mobile lag while keeping the 3D logo visible!
+    const isDesktop = window.innerWidth > 768;
+    if (!isDesktop) return;
+
     const handleMouseMove = (e) => {
       const x = e.clientX - window.innerWidth / 2;
       const y = e.clientY - window.innerHeight / 2;
@@ -26,7 +31,6 @@ const LoginPage = () => {
 
       if (logoRef.current) {
         logoRef.current.style.transition = 'none'; 
-        // 🔧 TWEAK: Reduced rotation for cleaner feel
         const rotateY = (x / window.innerWidth) * 30; 
         const rotateX = -(y / window.innerHeight) * 30; 
         logoRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
@@ -68,23 +72,18 @@ const LoginPage = () => {
         { withCredentials: true } 
       );
       
-      // 1. Save Token
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
       }
 
-      // 2. Save Email
       localStorage.setItem('userEmail', email);
 
-      // 3. SMART NAME LOGIC
       let nameToSave = response.data.name || response.data.user?.name;
-
       if (!nameToSave) {
         const namePart = email.split('@')[0];
         nameToSave = namePart.charAt(0).toUpperCase() + namePart.slice(1);
       }
 
-      // 4. Save the final name
       localStorage.setItem('userName', nameToSave);
 
       navigate('/dashboard');
@@ -96,6 +95,7 @@ const LoginPage = () => {
 
   return (
     // 🔧 MAIN LAYOUT FIX: 'overflow-x-hidden' stops horizontal scrolling
+    // Mobile: flex-col (Vertical Stack) | Desktop: flex-row (Side by Side)
     <div className="w-full min-h-screen bg-[#0A0D17] relative overflow-x-hidden flex flex-col md:flex-row">
       <style>{`
         #spline-watermark, .spline-watermark, a[href^="https://spline.design"] {
@@ -110,19 +110,19 @@ const LoginPage = () => {
       </div>
 
       {/* --- TOP SECTION (Mobile) / LEFT COLUMN (Desktop) --- */}
-      {/* 🔧 FIX: 35vh height on mobile to stack perfectly without overlap */}
-      <div className="w-full h-[35vh] md:w-1/2 md:h-screen flex justify-center items-center relative z-10 pt-4 md:pt-0">
-        <div ref={logoRef} className="flex flex-col items-center justify-center will-change-transform scale-75 md:scale-100">
-          <div className="w-[300px] h-[300px] md:w-[500px] md:h-[500px] relative pointer-events-none">
+      {/* 🔧 FIX: On mobile, this takes 40% of the screen height. The 3D logo stays visible but smaller. */}
+      <div className="w-full h-[40vh] md:w-1/2 md:h-screen flex justify-center items-center relative z-10 pt-4 md:pt-0">
+        <div ref={logoRef} className="flex flex-col items-center justify-center will-change-transform scale-[0.65] md:scale-100">
+          <div className="w-[400px] h-[400px] md:w-[500px] md:h-[500px] relative pointer-events-none">
             <Suspense fallback={<div className="text-center text-[#4A4E69]">Loading 3D...</div>}>
               <Spline scene="https://prod.spline.design/0rhIHPz8KM935PuI/scene.splinecode" />
             </Suspense>
           </div>
           <div className="text-center mt-[-30px] md:mt-[-40px] z-20 px-4">
-            <h1 className="text-3xl md:text-5xl font-bold text-white transition-colors duration-300 hover:text-[#7F5AF0] cursor-default">
+            <h1 className="text-4xl md:text-5xl font-bold text-white transition-colors duration-300 hover:text-[#7F5AF0] cursor-default">
               QueryStream
             </h1>
-            <p className="text-sm md:text-xl text-[#94A3B8] mt-1 font-light">
+            <p className="text-lg md:text-xl text-[#94A3B8] mt-1 font-light">
               From Query to Stream.
             </p>
           </div>
@@ -130,9 +130,9 @@ const LoginPage = () => {
       </div>
 
       {/* --- BOTTOM SECTION (Mobile) / RIGHT COLUMN (Desktop) --- */}
-      {/* 🔧 FIX: flex-1 takes remaining height. Vertical Flex ensures content is centered. */}
+      {/* 🔧 FIX: This takes the remaining space on mobile. Vertical flex ensures centering. */}
       <div className="w-full flex-1 md:w-1/2 md:h-screen flex flex-col justify-start md:justify-center items-center relative z-10 p-6 md:p-12">
-        <div ref={formRef} className="w-full max-w-md mx-auto will-change-transform mt-4 md:mt-0"> 
+        <div ref={formRef} className="w-full max-w-md mx-auto will-change-transform mt-2 md:mt-0"> 
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-2 text-center md:text-left">Welcome Back</h2>
           <p className="text-sm md:text-xl text-[#94A3B8] mb-8 text-center md:text-left">Log in to continue your flow.</p>
 

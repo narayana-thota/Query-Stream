@@ -17,8 +17,13 @@ const RegisterPage = () => {
   const formRef = useRef(null); 
   const resetTimer = useRef(null);
 
-  // --- ANIMATION LOGIC ---
+  // --- ANIMATION LOGIC (OPTIMIZED FOR PERFORMANCE) ---
   useEffect(() => {
+    // 🚀 EXPERT FIX: Only enable heavy mouse tracking on Desktop (>768px).
+    // This prevents mobile lag while keeping the 3D logo visible!
+    const isDesktop = window.innerWidth > 768;
+    if (!isDesktop) return;
+
     const handleMouseMove = (e) => {
       const x = e.clientX - window.innerWidth / 2;
       const y = e.clientY - window.innerHeight / 2;
@@ -26,7 +31,7 @@ const RegisterPage = () => {
 
       if (logoRef.current) {
         logoRef.current.style.transition = 'none'; 
-        // 🔧 TWEAK: Reduced rotation intensity for cleaner feel (like Login)
+        // Reduced rotation intensity for cleaner feel
         const rotateY = (x / window.innerWidth) * 30; 
         const rotateX = -(y / window.innerHeight) * 30; 
         logoRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
@@ -62,7 +67,6 @@ const RegisterPage = () => {
     setError(null);
 
     // 1. SMART NAME LOGIC (Auto-generate name from email)
-    // Example: "narayana@gmail.com" becomes "Narayana"
     let derivedName = "User";
     if (email.includes('@')) {
         const namePart = email.split('@')[0];
@@ -71,17 +75,15 @@ const RegisterPage = () => {
         if (cleanName) {
             derivedName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
         } else {
-            // If email is like "12345@gmail.com", keep it as "User" or use the numbers
             derivedName = namePart; 
         }
     }
 
     try {
-      // ✅ Sending the auto-generated 'name' to satisfy the backend
       const response = await axios.post(
         `${API_BASE_URL}/api/auth/register`, 
         { 
-            name: derivedName, // Hidden auto-generated name
+            name: derivedName, 
             email: email, 
             password: password 
         },
@@ -98,6 +100,7 @@ const RegisterPage = () => {
 
   return (
     // 🔧 LAYOUT FIX: 'overflow-x-hidden' stops side scrolling.
+    // Mobile: flex-col (Vertical Stack) | Desktop: flex-row (Side by Side)
     <div className="w-full min-h-screen bg-[#0A0D17] relative overflow-x-hidden flex flex-col md:flex-row">
       <style>{`
         #spline-watermark, .spline-watermark, a[href^="https://spline.design"] {
@@ -105,17 +108,17 @@ const RegisterPage = () => {
         }
       `}</style>
 
-      {/* BACKGROUND */}
+      {/* BACKGROUND (Fixed) */}
       <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
         <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-[#7F5AF0] rounded-full filter blur-[150px] opacity-20 animate-blob-slow"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-[#00E0C7] rounded-full filter blur-[150px] opacity-20 animate-blob-slow [animation-delay:-7s]"></div>
       </div>
 
       {/* --- TOP SECTION (Mobile) / LEFT COLUMN (Desktop) --- */}
-      {/* 🔧 FIX: 35vh height on mobile. Stacks perfectly on top. */}
+      {/* 🔧 FIX: On mobile, 3D takes 35% height. Logo stays visible but optimized. */}
       <div className="w-full h-[35vh] md:w-1/2 md:h-screen flex justify-center items-center relative z-10 pt-4 md:pt-0">
-        <div ref={logoRef} className="flex flex-col items-center justify-center will-change-transform scale-75 md:scale-100">
-          <div className="w-[300px] h-[300px] md:w-[500px] md:h-[500px] relative pointer-events-none">
+        <div ref={logoRef} className="flex flex-col items-center justify-center will-change-transform scale-[0.65] md:scale-100">
+          <div className="w-[400px] h-[400px] md:w-[500px] md:h-[500px] relative pointer-events-none">
             <Suspense fallback={<div className="text-center text-[#4A4E69]">Loading 3D...</div>}>
               <Spline scene="https://prod.spline.design/0rhIHPz8KM935PuI/scene.splinecode" />
             </Suspense>
@@ -132,7 +135,7 @@ const RegisterPage = () => {
       </div>
 
       {/* --- BOTTOM SECTION (Mobile) / RIGHT COLUMN (Desktop) --- */}
-      {/* 🔧 FIX: flex-1 fills remaining space vertically. No overlap. */}
+      {/* 🔧 FIX: Takes remaining height vertically. */}
       <div className="w-full flex-1 md:w-1/2 md:h-screen flex flex-col justify-start md:justify-center items-center relative z-10 p-6 md:p-12">
         <div ref={formRef} className="w-full max-w-md mx-auto will-change-transform mt-4 md:mt-0"> 
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 text-center md:text-left">Create Account</h2>

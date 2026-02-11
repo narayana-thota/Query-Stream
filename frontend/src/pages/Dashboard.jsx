@@ -370,31 +370,34 @@ const Dashboard = ({ toggleSidebar }) => {
                 </div>
             </section>
 
-            {/* 🔧 FIX: Stats Grid - 3 cols on Mobile (Same Row), Reverted to "Previous" Design */}
+            {/* 🔧 FIX: Stats Grid - 3 cols on Mobile (Same Row), Glassmorphism Box for Icon */}
             <div className="grid grid-cols-3 gap-2 md:gap-6">
                 {/* PENDING CARD */}
-                <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2">
+                <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2 text-center">
                     <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold">PENDING</p>
                     <h3 className={`text-xl md:text-4xl font-black ${stats.pendingTasks > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.pendingTasks}</h3>
-                    <div className="p-2 bg-[#0A0D17] rounded-lg border border-white/10 text-[#7F5AF0]">
+                    {/* Glassmorphism Icon Box */}
+                    <div className="p-2 rounded-lg bg-[#1F2937]/50 border border-white/10 text-[#7F5AF0] backdrop-blur-sm shadow-inner">
                         <CheckSquare size={16} className="md:w-6 md:h-6" />
                     </div>
                 </div>
 
                 {/* PDFS CARD */}
-                <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2">
+                <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2 text-center">
                     <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold">PDFS</p>
                     <h3 className={`text-xl md:text-4xl font-black ${stats.totalPdfs > 0 ? 'text-[#00E0C7]' : 'text-white'}`}>{stats.totalPdfs}</h3>
-                    <div className="p-2 bg-[#0A0D17] rounded-lg border border-white/10 text-[#00E0C7]">
+                    {/* Glassmorphism Icon Box */}
+                    <div className="p-2 rounded-lg bg-[#1F2937]/50 border border-white/10 text-[#00E0C7] backdrop-blur-sm shadow-inner">
                         <FileText size={16} className="md:w-6 md:h-6" />
                     </div>
                 </div>
 
                 {/* PODCASTS CARD */}
-                <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2">
+                <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2 text-center">
                     <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold">PODCASTS</p>
                     <h3 className={`text-xl md:text-4xl font-black ${stats.totalPodcasts > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.totalPodcasts}</h3>
-                    <div className="p-2 bg-[#0A0D17] rounded-lg border border-white/10 text-[#7F5AF0]">
+                    {/* Glassmorphism Icon Box */}
+                    <div className="p-2 rounded-lg bg-[#1F2937]/50 border border-white/10 text-[#7F5AF0] backdrop-blur-sm shadow-inner">
                         <AudioLines size={16} className="md:w-6 md:h-6" />
                     </div>
                 </div>
@@ -407,14 +410,14 @@ const Dashboard = ({ toggleSidebar }) => {
                     <Link to="/todo" className="text-sm text-[#7F5AF0] hover:text-[#00E0C7] font-medium">See All</Link>
                 </div>
                 
-                {/* 🔧 FIX: Priority Focus Box */}
+                {/* 🔧 FIX: Priority Focus Box - Added padding so focus ring isn't cut */}
                 <div className="relative mb-4 md:mb-6">
                     <div className="relative mb-3">
                         <Plus className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
                         <input type="text" value={newTask} onChange={(e) => setNewTask(e.target.value)} onKeyDown={handleAddTask} placeholder="Add a task..." className="w-full bg-[#0A0D17] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-[#7F5AF0] transition-all placeholder:text-[#94A3B8]/50 shadow-inner" />
                     </div>
                     
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 p-1 -ml-1 no-scrollbar">
                         <span className="text-xs text-gray-500 font-bold uppercase tracking-wider hidden md:block mr-1">Priority:</span>
                         {[ { val: 'Low', color: 'text-blue-400', border: 'border-blue-400/30 bg-blue-400/10' }, { val: 'Medium', color: 'text-amber-400', border: 'border-amber-400/30 bg-amber-400/10' }, { val: 'High', color: 'text-red-400', border: 'border-red-400/30 bg-red-400/10' } ].map((p) => (
                             <button key={p.val} onClick={() => setPriority(p.val)} className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-2 py-2 md:px-3 rounded-lg md:rounded-md transition-all border outline-none ${priority === p.val ? `${p.color} ${p.border} ring-1 ring-white/10` : `text-slate-500 border-transparent hover:bg-white/5`}`}>

@@ -361,9 +361,10 @@ const PodcastGenPage = ({ toggleSidebar }) => {
     // 🔧 FIX: overflow-x-hidden ensures no horizontal drift
     <div className="h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 flex flex-col overflow-hidden">
       
-      {/* HEADER */}
-      <header className="flex items-center justify-between px-8 py-6 flex-shrink-0 bg-[#0A0D17] z-10 border-b border-gray-800">
+      {/* HEADER: Fixed (Sticky logic via flex-col) */}
+      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] flex-shrink-0 z-10 border-b border-gray-800">
         <div className="flex items-center gap-4">
+          {/* Mobile Menu Button */}
           <button
             className="md:hidden text-[#94A3B8] hover:text-white p-1"
             onClick={toggleSidebar}
@@ -389,10 +390,11 @@ const PodcastGenPage = ({ toggleSidebar }) => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end">
-              <span className="text-sm font-bold text-white leading-none">
+              {/* 🔧 FIX: Truncate Name & Hide Email on Mobile */}
+              <span className="text-sm font-bold text-white leading-none truncate max-w-[100px] md:max-w-none">
                 {user.name}
               </span>
-              <span className="text-[10px] text-[#94A3B8] font-medium mt-1 max-w-[150px] truncate">
+              <span className="text-[10px] text-[#94A3B8] font-medium mt-1 max-w-[150px] truncate hidden sm:block">
                 {user.email}
               </span>
             </div>

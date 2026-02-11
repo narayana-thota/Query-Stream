@@ -221,7 +221,7 @@ const PDFManagerPage = ({ toggleSidebar }) => {
       `}</style>
       
       {/* HEADER - Fixed at top */}
-      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] flex-shrink-0 border-b border-gray-800">
+      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] flex-shrink-0 border-b border-gray-800 z-50">
         <div className="flex items-center gap-3 md:gap-4">
           {/* Mobile Menu Button */}
           <button
@@ -243,8 +243,13 @@ const PDFManagerPage = ({ toggleSidebar }) => {
         <div className="flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-2 md:gap-3 pl-3 md:pl-6 border-l border-gray-800">
             <div className="text-right">
-              <p className="text-xs md:text-sm font-bold text-white leading-tight">{user.name}</p>
-              <p className="text-[9px] md:text-xs text-gray-500 break-all">{user.email}</p>
+              {/* 🔧 FIX: Truncate Name & Hide Email on Mobile to prevent overflow */}
+              <p className="text-xs md:text-sm font-bold text-white leading-tight truncate max-w-[100px] md:max-w-none">
+                {user.name}
+              </p>
+              <p className="text-[9px] md:text-xs text-gray-500 break-all hidden sm:block">
+                {user.email}
+              </p>
             </div>
             <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-white text-xs md:text-sm font-bold shadow-lg ring-2 ring-[#0A0D17]">
               {user.initials}
@@ -254,10 +259,10 @@ const PDFManagerPage = ({ toggleSidebar }) => {
       </header>
 
       {/* CONTENT - Scrollable Area */}
-      <div className="flex-1 overflow-y-auto page-scroll">
+      <div className="flex-1 overflow-y-auto page-scroll overflow-x-hidden">
         <div className="px-4 md:px-8 py-4 md:py-8 max-w-[1600px] mx-auto">
-          {/* 🔧 FIX: Added 'pb-20' for safe mobile bottom spacing */}
-          <div className="flex flex-col gap-4 md:gap-6 pb-20 md:pb-0">
+          {/* 🔧 FIX: Adjusted bottom padding to match Dashboard */}
+          <div className="flex flex-col gap-4 md:gap-6 pb-6 md:pb-0">
             
             {/* TOP ROW: UPLOADER + SUMMARY */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 animate-in fade-in slide-in-from-top-4 duration-700">
