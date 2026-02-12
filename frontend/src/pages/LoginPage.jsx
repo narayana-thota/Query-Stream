@@ -3,7 +3,7 @@
 import React, { useState, Suspense, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import API_BASE_URL from '../config'; // ✅ IMPORTED CONFIG
+import API_BASE_URL from '../config'; 
 import Spline from '@splinetool/react-spline';
 
 const LoginPage = () => {
@@ -17,12 +17,11 @@ const LoginPage = () => {
   const formRef = useRef(null); 
   const resetTimer = useRef(null);
 
-  // --- ANIMATION LOGIC (OPTIMIZED) ---
+  // --- ANIMATION LOGIC ---
   useEffect(() => {
-    // 🚀 EXPERT FIX: Only enable heavy mouse tracking on Desktop (>768px).
-    // This prevents mobile lag while keeping the 3D logo visible!
-    const isDesktop = window.innerWidth > 768;
-    if (!isDesktop) return;
+    // Only track mouse on devices larger than tablets to prevent lag
+    const isLargeScreen = window.innerWidth > 1024;
+    if (!isLargeScreen) return;
 
     const handleMouseMove = (e) => {
       const x = e.clientX - window.innerWidth / 2;
@@ -31,14 +30,14 @@ const LoginPage = () => {
 
       if (logoRef.current) {
         logoRef.current.style.transition = 'none'; 
-        const rotateY = (x / window.innerWidth) * 30; 
-        const rotateX = -(y / window.innerHeight) * 30; 
+        const rotateY = (x / window.innerWidth) * 20; 
+        const rotateX = -(y / window.innerHeight) * 20; 
         logoRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
       }
 
       if (formRef.current) {
         formRef.current.style.transition = 'none'; 
-        formRef.current.style.transform = `translate3d(${x * -0.015}px, ${y * -0.015}px, 0px)`;
+        formRef.current.style.transform = `translate3d(${x * -0.01}px, ${y * -0.01}px, 0px)`;
       }
 
       resetTimer.current = setTimeout(() => {
@@ -65,7 +64,6 @@ const LoginPage = () => {
     e.preventDefault();
     setError(null);
     try {
-      // ✅ Uses API_BASE_URL
       const response = await axios.post(
         `${API_BASE_URL}/api/auth/login`, 
         { email, password },
@@ -75,7 +73,6 @@ const LoginPage = () => {
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
       }
-
       localStorage.setItem('userEmail', email);
 
       let nameToSave = response.data.name || response.data.user?.name;
@@ -83,7 +80,6 @@ const LoginPage = () => {
         const namePart = email.split('@')[0];
         nameToSave = namePart.charAt(0).toUpperCase() + namePart.slice(1);
       }
-
       localStorage.setItem('userName', nameToSave);
 
       navigate('/dashboard');
@@ -94,13 +90,13 @@ const LoginPage = () => {
   };
 
   return (
-    // 🔧 LAYOUT FIX: 'h-screen' and 'overflow-hidden' strictly prevents scrolling
-    <div className="h-screen w-full bg-[#0A0D17] relative overflow-hidden flex flex-col md:flex-row">
+    // 🔧 FIX: h-screen + overflow-hidden prevents scrolling. Flex handles layout.
+    <div className="h-screen w-full bg-[#0A0D17] relative overflow-hidden flex flex-col lg:flex-row">
       
-      {/* 🔧 CSS HACK: Hide Spline Watermark */}
+      {/* 🔧 CSS HACK: Strictly hide Spline Watermark */}
       <style>{`
         #spline-watermark, .spline-watermark, a[href^="https://spline.design"] {
-          display: none !important; opacity: 0 !important; pointer-events: none !important; position: absolute !important;
+          display: none !important; opacity: 0 !important; pointer-events: none !important; position: absolute !important; width: 0 !important; height: 0 !important;
         }
       `}</style>
 
@@ -111,19 +107,22 @@ const LoginPage = () => {
       </div>
 
       {/* --- LEFT COLUMN (3D LOGO) --- */}
-      {/* Mobile: 35% height | Desktop: 50% width, Full Height */}
-      <div className="w-full h-[35vh] md:w-1/2 md:h-full flex justify-center items-center relative z-10 pt-4 md:pt-0">
-        <div ref={logoRef} className="flex flex-col items-center justify-center will-change-transform scale-[0.65] md:scale-100">
-          <div className="w-[400px] h-[400px] md:w-[500px] md:h-[500px] relative pointer-events-none">
+      {/* 🔧 FIX: Flexible height. Takes 40% on mobile, 50% width on Desktop. No negative margins. */}
+      <div className="w-full h-[40%] lg:h-full lg:w-1/2 flex flex-col justify-center items-center relative z-10 p-4">
+        <div ref={logoRef} className="flex flex-col items-center justify-center w-full h-full">
+          {/* 3D Container: Responsive size, max width constraints */}
+          <div className="w-full max-w-[300px] aspect-square lg:max-w-[500px] relative">
             <Suspense fallback={<div className="text-center text-[#4A4E69]">Loading 3D...</div>}>
               <Spline scene="https://prod.spline.design/0rhIHPz8KM935PuI/scene.splinecode" />
             </Suspense>
           </div>
-          <div className="text-center mt-[-30px] md:mt-[-40px] z-20 px-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-white transition-colors duration-300 hover:text-[#7F5AF0] cursor-default">
+          
+          {/* Text Container: Standard margins (no negatives) to prevent overlap */}
+          <div className="text-center mt-4 z-20">
+            <h1 className="text-3xl lg:text-5xl font-bold text-white transition-colors duration-300 hover:text-[#7F5AF0] cursor-default">
               QueryStream
             </h1>
-            <p className="text-lg md:text-xl text-[#94A3B8] mt-1 font-light">
+            <p className="text-sm lg:text-xl text-[#94A3B8] mt-2 font-light">
               From Query to Stream.
             </p>
           </div>
@@ -131,13 +130,13 @@ const LoginPage = () => {
       </div>
 
       {/* --- RIGHT COLUMN (LOGIN FORM) --- */}
-      {/* Mobile: Fills remaining height | Desktop: 50% width, Full Height */}
-      <div className="w-full flex-1 md:w-1/2 md:h-full flex flex-col justify-start md:justify-center items-center relative z-10 p-6 md:p-12">
-        <div ref={formRef} className="w-full max-w-md mx-auto will-change-transform mt-2 md:mt-0"> 
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-2 text-center md:text-left">Welcome Back</h2>
-          <p className="text-sm md:text-xl text-[#94A3B8] mb-8 text-center md:text-left">Log in to continue your flow.</p>
+      {/* 🔧 FIX: Takes remaining height. Flex center ensures it never goes off screen. */}
+      <div className="w-full h-[60%] lg:h-full lg:w-1/2 flex flex-col justify-center items-center relative z-10 p-6 lg:p-12 bg-gradient-to-t from-[#0A0D17] to-transparent lg:bg-none">
+        <div ref={formRef} className="w-full max-w-md mx-auto"> 
+          <h2 className="text-2xl lg:text-5xl font-bold text-white mb-2 text-center lg:text-left">Welcome Back</h2>
+          <p className="text-sm lg:text-xl text-[#94A3B8] mb-6 lg:mb-8 text-center lg:text-left">Log in to continue your flow.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
             <div className="relative group">
               <input 
                 type="email" 
@@ -150,7 +149,7 @@ const LoginPage = () => {
               />
               <label 
                 htmlFor="email" 
-                className="absolute left-0 -top-3.5 text-[#94A3B8] text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-sm"
+                className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm"
               >
                 Email Address
               </label>
@@ -168,7 +167,7 @@ const LoginPage = () => {
               />
               <label 
                 htmlFor="password" 
-                className="absolute left-0 -top-3.5 text-[#94A3B8] text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-sm"
+                className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm"
               >
                 Password
               </label>
@@ -176,11 +175,11 @@ const LoginPage = () => {
             
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-            <button type="submit" className="w-full py-3.5 md:py-4 mt-4 bg-[#7F5AF0] hover:bg-[#6f4df7] text-white font-bold text-lg rounded-full shadow-lg hover:shadow-[#7F5AF0]/40 transition-all transform hover:-translate-y-1">
+            <button type="submit" className="w-full py-3 lg:py-4 mt-4 bg-[#7F5AF0] hover:bg-[#6f4df7] text-white font-bold text-lg rounded-full shadow-lg hover:shadow-[#7F5AF0]/40 transition-all transform hover:-translate-y-1">
               Login
             </button>
 
-            <p className="text-center text-[#94A3B8] text-sm mt-6">
+            <p className="text-center text-[#94A3B8] text-sm mt-4 lg:mt-6">
               Don't have an account? <Link to="/register" className="text-[#00E0C7] font-medium hover:text-[#33ffea] transition-colors">Sign Up</Link>
             </p>
           </form>
