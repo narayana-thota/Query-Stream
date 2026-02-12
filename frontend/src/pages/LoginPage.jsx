@@ -94,12 +94,13 @@ const LoginPage = () => {
   };
 
   return (
-    // 🔧 MAIN LAYOUT FIX: 'overflow-x-hidden' stops horizontal scrolling
-    // Mobile: flex-col (Vertical Stack) | Desktop: flex-row (Side by Side)
-    <div className="w-full min-h-screen bg-[#0A0D17] relative overflow-x-hidden flex flex-col md:flex-row">
+    // 🔧 LAYOUT FIX: 'h-screen' and 'overflow-hidden' strictly prevents scrolling
+    <div className="h-screen w-full bg-[#0A0D17] relative overflow-hidden flex flex-col md:flex-row">
+      
+      {/* 🔧 CSS HACK: Hide Spline Watermark */}
       <style>{`
         #spline-watermark, .spline-watermark, a[href^="https://spline.design"] {
-          display: none !important; opacity: 0 !important; pointer-events: none !important;
+          display: none !important; opacity: 0 !important; pointer-events: none !important; position: absolute !important;
         }
       `}</style>
 
@@ -109,9 +110,9 @@ const LoginPage = () => {
         <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-[#00E0C7] rounded-full filter blur-[150px] opacity-20 animate-blob-slow [animation-delay:-7s]"></div>
       </div>
 
-      {/* --- TOP SECTION (Mobile) / LEFT COLUMN (Desktop) --- */}
-      {/* 🔧 FIX: On mobile, this takes 40% of the screen height. The 3D logo stays visible but smaller. */}
-      <div className="w-full h-[40vh] md:w-1/2 md:h-screen flex justify-center items-center relative z-10 pt-4 md:pt-0">
+      {/* --- LEFT COLUMN (3D LOGO) --- */}
+      {/* Mobile: 35% height | Desktop: 50% width, Full Height */}
+      <div className="w-full h-[35vh] md:w-1/2 md:h-full flex justify-center items-center relative z-10 pt-4 md:pt-0">
         <div ref={logoRef} className="flex flex-col items-center justify-center will-change-transform scale-[0.65] md:scale-100">
           <div className="w-[400px] h-[400px] md:w-[500px] md:h-[500px] relative pointer-events-none">
             <Suspense fallback={<div className="text-center text-[#4A4E69]">Loading 3D...</div>}>
@@ -129,27 +130,55 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* --- BOTTOM SECTION (Mobile) / RIGHT COLUMN (Desktop) --- */}
-      {/* 🔧 FIX: This takes the remaining space on mobile. Vertical flex ensures centering. */}
-      <div className="w-full flex-1 md:w-1/2 md:h-screen flex flex-col justify-start md:justify-center items-center relative z-10 p-6 md:p-12">
+      {/* --- RIGHT COLUMN (LOGIN FORM) --- */}
+      {/* Mobile: Fills remaining height | Desktop: 50% width, Full Height */}
+      <div className="w-full flex-1 md:w-1/2 md:h-full flex flex-col justify-start md:justify-center items-center relative z-10 p-6 md:p-12">
         <div ref={formRef} className="w-full max-w-md mx-auto will-change-transform mt-2 md:mt-0"> 
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-2 text-center md:text-left">Welcome Back</h2>
           <p className="text-sm md:text-xl text-[#94A3B8] mb-8 text-center md:text-left">Log in to continue your flow.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-5 md:space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
             <div className="relative group">
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full py-3 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" id="email" placeholder="Email" />
-              <label htmlFor="email" className="absolute left-0 -top-3.5 text-[#94A3B8] text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-sm">Email Address</label>
+              <input 
+                type="email" 
+                id="email" 
+                required 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                className="w-full py-3 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
+                placeholder="Email" 
+              />
+              <label 
+                htmlFor="email" 
+                className="absolute left-0 -top-3.5 text-[#94A3B8] text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-sm"
+              >
+                Email Address
+              </label>
             </div>
 
             <div className="relative group">
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full py-3 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" id="password" placeholder="Password" />
-              <label htmlFor="password" className="absolute left-0 -top-3.5 text-[#94A3B8] text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-sm">Password</label>
+              <input 
+                type="password" 
+                id="password" 
+                required 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                className="w-full py-3 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
+                placeholder="Password" 
+              />
+              <label 
+                htmlFor="password" 
+                className="absolute left-0 -top-3.5 text-[#94A3B8] text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-sm"
+              >
+                Password
+              </label>
             </div>
             
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-            <button type="submit" className="w-full py-3.5 md:py-4 mt-4 bg-[#7F5AF0] hover:bg-[#6f4df7] text-white font-bold text-lg rounded-full shadow-lg hover:shadow-[#7F5AF0]/40 transition-all transform hover:-translate-y-1">Login</button>
+            <button type="submit" className="w-full py-3.5 md:py-4 mt-4 bg-[#7F5AF0] hover:bg-[#6f4df7] text-white font-bold text-lg rounded-full shadow-lg hover:shadow-[#7F5AF0]/40 transition-all transform hover:-translate-y-1">
+              Login
+            </button>
 
             <p className="text-center text-[#94A3B8] text-sm mt-6">
               Don't have an account? <Link to="/register" className="text-[#00E0C7] font-medium hover:text-[#33ffea] transition-colors">Sign Up</Link>
