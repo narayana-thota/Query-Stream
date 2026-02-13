@@ -1,65 +1,50 @@
 // frontend/src/pages/LoginPage.jsx
 
-import React, { useState, Suspense, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import API_BASE_URL from '../config'; 
-import Spline from '@splinetool/react-spline';
+
+// --- CUSTOM LOGO COMPONENT (Replaces Spline) ---
+const CustomLogo = () => {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-2xl">
+      {/* DEFINITIONS FOR GRADIENTS (3D Effect) */}
+      <defs>
+        {/* Purple Sphere Gradient */}
+        <radialGradient id="sphereGrad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(140 160) rotate(50) scale(140)">
+          <stop stopColor="#9F7AEA" /> {/* Light Purple Highlight */}
+          <stop offset="1" stopColor="#5B21B6" /> {/* Dark Purple Shadow */}
+        </radialGradient>
+        
+        {/* Teal Bars Gradient */}
+        <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop stopColor="#2DD4BF" /> {/* Teal Highlight */}
+          <stop offset="1" stopColor="#0F766E" /> {/* Teal Shadow */}
+        </linearGradient>
+      </defs>
+
+      {/* 1. THE PURPLE SPHERE */}
+      <circle cx="150" cy="200" r="90" fill="url(#sphereGrad)" />
+
+      {/* 2. THE TEAL BEAMS (Angled to match your design) */}
+      {/* Top Bar */}
+      <rect x="260" y="110" width="160" height="40" rx="20" transform="rotate(15 260 110)" fill="#00E0C7" />
+      
+      {/* Middle Bar */}
+      <rect x="270" y="180" width="160" height="40" rx="20" fill="#00E0C7" />
+      
+      {/* Bottom Bar */}
+      <rect x="260" y="250" width="160" height="40" rx="20" transform="rotate(-15 260 250)" fill="#00E0C7" />
+    </svg>
+  );
+};
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  // --- REFS ---
-  const logoRef = useRef(null); 
-  const formRef = useRef(null); 
-  const resetTimer = useRef(null);
-
-  // --- ANIMATION LOGIC (Performance Optimized) ---
-  useEffect(() => {
-    // Only track mouse on Desktop (>1024px) to prevent mobile lag/battery drain
-    const isDesktop = window.innerWidth > 1024;
-    if (!isDesktop) return;
-
-    const handleMouseMove = (e) => {
-      const x = e.clientX - window.innerWidth / 2;
-      const y = e.clientY - window.innerHeight / 2;
-      if (resetTimer.current) clearTimeout(resetTimer.current);
-
-      if (logoRef.current) {
-        logoRef.current.style.transition = 'none'; 
-        // Subtle rotation
-        const rotateY = (x / window.innerWidth) * 15; 
-        const rotateX = -(y / window.innerHeight) * 15; 
-        logoRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-      }
-
-      if (formRef.current) {
-        formRef.current.style.transition = 'none'; 
-        // Subtle parallax translation
-        formRef.current.style.transform = `translate3d(${x * -0.01}px, ${y * -0.01}px, 0px)`;
-      }
-
-      resetTimer.current = setTimeout(() => {
-        if (logoRef.current) {
-          logoRef.current.style.transition = 'transform 1s cubic-bezier(0.2, 0.8, 0.2, 1)'; 
-          logoRef.current.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
-        }
-        if (formRef.current) {
-          formRef.current.style.transition = 'transform 1s cubic-bezier(0.2, 0.8, 0.2, 1)'; 
-          formRef.current.style.transform = 'translate3d(0px, 0px, 0px)';
-        }
-      }, 200); 
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (resetTimer.current) clearTimeout(resetTimer.current);
-    };
-  }, []);
 
   // --- HANDLE SUBMIT ---
   const handleSubmit = async (e) => {
@@ -92,21 +77,13 @@ const LoginPage = () => {
   };
 
   return (
-    // 🔧 LAYOUT FIX: 'h-[100dvh]' handles mobile browser bars.
-    // 'overflow-hidden' on parent, specific overflow on children to prevent body scrollbar.
-    <div className="h-[100dvh] w-full bg-[#0A0D17] relative flex flex-col lg:flex-row overflow-hidden">
+    // 🔧 LAYOUT: min-h-screen handles content overflow naturally
+    <div className="min-h-screen w-full bg-[#0A0D17] relative flex flex-col lg:flex-row overflow-x-hidden">
       
-      {/* 🔧 CSS: Hide Scrollbars & Force Watermark Hidden */}
+      {/* 🔧 CSS: Hide Scrollbars for cleaner look */}
       <style>{`
-        /* Hide Scrollbar for Chrome/Safari/Opera */
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        /* Hide Scrollbar for IE, Edge and Firefox */
-        .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
       {/* BACKGROUND (Fixed) */}
@@ -115,27 +92,19 @@ const LoginPage = () => {
         <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-[#00E0C7] rounded-full filter blur-[150px] opacity-20 animate-blob-slow [animation-delay:-7s]"></div>
       </div>
 
-      {/* --- LEFT COLUMN (3D LOGO) --- */}
-      {/* 🔧 FIX: Mobile: 40% height. Desktop: 55% width. Flex shrink 0 prevents collapse. */}
-      <div className="w-full h-[40vh] lg:h-full lg:w-[55%] flex flex-col justify-center items-center relative z-10 p-4 shrink-0">
-        <div ref={logoRef} className="flex flex-col items-center justify-center w-full h-full will-change-transform">
+      {/* --- LEFT COLUMN (CUSTOM LOGO) --- */}
+      {/* Replaced Spline with the new CustomLogo component */}
+      <div className="w-full h-[40vh] lg:h-auto lg:w-[55%] flex flex-col justify-center items-center relative z-10 p-4 shrink-0 lg:min-h-screen">
+        <div className="flex flex-col items-center justify-center w-full h-full">
           
-          {/* 🧠 WATERMARK NUKE: The "Crop & Zoom" Technique 
-             1. Parent: 'overflow-hidden' creates a frame.
-             2. Child: 'scale-[1.2]' zooms in by 20%.
-             3. Result: The watermark at the edge is pushed OUTSIDE the frame and clipped.
-          */}
-          <div className="w-full h-full max-h-[300px] lg:max-h-[600px] relative flex items-center justify-center overflow-hidden">
-             <div className="w-full h-full scale-[1.25] flex items-center justify-center">
-                <Suspense fallback={<div className="text-center text-[#4A4E69] text-sm animate-pulse">Loading 3D Experience...</div>}>
-                  <Spline scene="https://prod.spline.design/0rhIHPz8KM935PuI/scene.splinecode" />
-                </Suspense>
-             </div>
+          {/* Logo Container */}
+          <div className="w-[280px] h-[280px] lg:w-[500px] lg:h-[500px] relative flex items-center justify-center animate-in fade-in zoom-in duration-700">
+             <CustomLogo />
           </div>
           
-          {/* Title Text - Positioned relatively to stack below the 3D scene cleanly */}
-          <div className="text-center mt-[-10px] lg:mt-[-20px] z-20 relative pointer-events-auto">
-            <h1 className="text-3xl lg:text-6xl font-bold text-white tracking-tight drop-shadow-lg">
+          {/* Title Text */}
+          <div className="text-center mt-[-20px] lg:mt-[-40px] z-20 relative">
+            <h1 className="text-3xl lg:text-6xl font-bold text-white tracking-tight drop-shadow-xl">
               QueryStream
             </h1>
             <p className="text-sm lg:text-xl text-[#94A3B8] mt-2 font-light">
@@ -146,9 +115,8 @@ const LoginPage = () => {
       </div>
 
       {/* --- RIGHT COLUMN (LOGIN FORM) --- */}
-      {/* 🔧 FIX: 'overflow-y-auto' allows this section to scroll independently if content overflows (split screen) */}
-      <div className="w-full flex-1 lg:h-full lg:w-[45%] flex flex-col justify-center items-center relative z-10 p-6 lg:p-12 lg:pl-0 bg-transparent overflow-y-auto no-scrollbar">
-        <div ref={formRef} className="w-full max-w-sm lg:max-w-md mx-auto will-change-transform pb-8 lg:pb-0"> 
+      <div className="w-full flex-1 lg:h-full lg:w-[45%] flex flex-col justify-center items-center relative z-10 p-6 lg:p-12 lg:pl-0 bg-transparent lg:min-h-screen">
+        <div className="w-full max-w-sm lg:max-w-md mx-auto pb-8 lg:pb-0"> 
           
           <div className="mb-8 text-center lg:text-left">
             <h2 className="text-3xl lg:text-5xl font-bold text-white mb-2">Welcome Back</h2>
@@ -157,10 +125,12 @@ const LoginPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             
+            {/* Email Field */}
             <div className="relative group">
               <input 
                 type="email" 
                 id="email" 
+                name="email"
                 required 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
@@ -175,10 +145,12 @@ const LoginPage = () => {
               </label>
             </div>
 
+            {/* Password Field */}
             <div className="relative group">
               <input 
                 type="password" 
-                id="password" 
+                id="password"
+                name="password" 
                 required 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
