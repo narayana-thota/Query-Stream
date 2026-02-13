@@ -19,9 +19,9 @@ const LoginPage = () => {
 
   // --- ANIMATION LOGIC ---
   useEffect(() => {
-    // Only track mouse on devices larger than tablets to prevent lag
-    const isLargeScreen = window.innerWidth > 1024;
-    if (!isLargeScreen) return;
+    // Only track mouse on Desktop (>1024px)
+    const isDesktop = window.innerWidth > 1024;
+    if (!isDesktop) return;
 
     const handleMouseMove = (e) => {
       const x = e.clientX - window.innerWidth / 2;
@@ -30,8 +30,8 @@ const LoginPage = () => {
 
       if (logoRef.current) {
         logoRef.current.style.transition = 'none'; 
-        const rotateY = (x / window.innerWidth) * 20; 
-        const rotateX = -(y / window.innerHeight) * 20; 
+        const rotateY = (x / window.innerWidth) * 15; 
+        const rotateX = -(y / window.innerHeight) * 15; 
         logoRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
       }
 
@@ -90,36 +90,35 @@ const LoginPage = () => {
   };
 
   return (
-    // 🔧 FIX: h-screen + overflow-hidden prevents scrolling. Flex handles layout.
-    <div className="h-screen w-full bg-[#0A0D17] relative overflow-hidden flex flex-col lg:flex-row">
+    // 🔧 LAYOUT FIX: 'min-h-screen' allows scrolling on small split-screens.
+    <div className="min-h-screen w-full bg-[#0A0D17] relative flex flex-col lg:flex-row overflow-x-hidden">
       
-      {/* 🔧 CSS HACK: Strictly hide Spline Watermark */}
-      <style>{`
-        #spline-watermark, .spline-watermark, a[href^="https://spline.design"] {
-          display: none !important; opacity: 0 !important; pointer-events: none !important; position: absolute !important; width: 0 !important; height: 0 !important;
-        }
-      `}</style>
-
-      {/* BACKGROUND (Fixed) */}
+      {/* BACKGROUND */}
       <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
         <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-[#7F5AF0] rounded-full filter blur-[150px] opacity-20 animate-blob-slow"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-[#00E0C7] rounded-full filter blur-[150px] opacity-20 animate-blob-slow [animation-delay:-7s]"></div>
       </div>
 
       {/* --- LEFT COLUMN (3D LOGO) --- */}
-      {/* 🔧 FIX: Flexible height. Takes 40% on mobile, 50% width on Desktop. No negative margins. */}
-      <div className="w-full h-[40%] lg:h-full lg:w-1/2 flex flex-col justify-center items-center relative z-10 p-4">
-        <div ref={logoRef} className="flex flex-col items-center justify-center w-full h-full">
-          {/* 3D Container: Responsive size, max width constraints */}
-          <div className="w-full max-w-[300px] aspect-square lg:max-w-[500px] relative">
-            <Suspense fallback={<div className="text-center text-[#4A4E69]">Loading 3D...</div>}>
-              <Spline scene="https://prod.spline.design/0rhIHPz8KM935PuI/scene.splinecode" />
-            </Suspense>
+      <div className="w-full h-[40vh] lg:h-auto lg:w-[55%] flex flex-col justify-center items-center relative z-10 p-4 shrink-0 lg:min-h-screen">
+        <div ref={logoRef} className="flex flex-col items-center justify-center w-full h-full will-change-transform">
+          
+          {/* 🧠 WATERMARK NUKE (The Crop Technique) 
+             1. 'overflow-hidden' on the container acts as the "Frame".
+             2. The inner div is 'scale-125' (125% size).
+             3. This pushes the bottom-right corner (watermark) outside the frame.
+          */}
+          <div className="w-full h-full max-h-[300px] lg:max-h-[600px] relative flex items-center justify-center overflow-hidden">
+             <div className="w-full h-full scale-[1.25] lg:scale-[1.2] flex items-center justify-center pointer-events-none">
+                <Suspense fallback={<div className="text-center text-[#4A4E69] text-sm animate-pulse">Loading 3D Experience...</div>}>
+                  <Spline scene="https://prod.spline.design/0rhIHPz8KM935PuI/scene.splinecode" />
+                </Suspense>
+             </div>
           </div>
           
-          {/* Text Container: Standard margins (no negatives) to prevent overlap */}
-          <div className="text-center mt-4 z-20">
-            <h1 className="text-3xl lg:text-5xl font-bold text-white transition-colors duration-300 hover:text-[#7F5AF0] cursor-default">
+          {/* Title Text */}
+          <div className="text-center mt-[-20px] z-20 relative pointer-events-auto">
+            <h1 className="text-3xl lg:text-6xl font-bold text-white tracking-tight">
               QueryStream
             </h1>
             <p className="text-sm lg:text-xl text-[#94A3B8] mt-2 font-light">
@@ -130,57 +129,72 @@ const LoginPage = () => {
       </div>
 
       {/* --- RIGHT COLUMN (LOGIN FORM) --- */}
-      {/* 🔧 FIX: Takes remaining height. Flex center ensures it never goes off screen. */}
-      <div className="w-full h-[60%] lg:h-full lg:w-1/2 flex flex-col justify-center items-center relative z-10 p-6 lg:p-12 bg-gradient-to-t from-[#0A0D17] to-transparent lg:bg-none">
-        <div ref={formRef} className="w-full max-w-md mx-auto"> 
-          <h2 className="text-2xl lg:text-5xl font-bold text-white mb-2 text-center lg:text-left">Welcome Back</h2>
-          <p className="text-sm lg:text-xl text-[#94A3B8] mb-6 lg:mb-8 text-center lg:text-left">Log in to continue your flow.</p>
+      {/* 🔧 FIX: 'flex-1' allows it to grow. 'py-8' ensures spacing on small screens. */}
+      <div className="w-full flex-1 lg:w-[45%] flex flex-col justify-center items-center relative z-10 p-6 lg:p-12 lg:pl-0 bg-transparent lg:min-h-screen">
+        <div ref={formRef} className="w-full max-w-sm lg:max-w-md mx-auto will-change-transform"> 
+          
+          <div className="mb-8 text-center lg:text-left">
+            <h2 className="text-3xl lg:text-5xl font-bold text-white mb-2">Welcome Back</h2>
+            <p className="text-sm lg:text-lg text-[#94A3B8]">Log in to continue your flow.</p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Email Field with Proper Label */}
             <div className="relative group">
               <input 
                 type="email" 
                 id="email" 
+                name="email"
                 required 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
-                className="w-full py-3 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
-                placeholder="Email" 
+                className="w-full py-3 lg:py-4 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
+                placeholder="Email Address" 
               />
               <label 
                 htmlFor="email" 
-                className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm"
+                className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 lg:peer-placeholder-shown:top-4 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm"
               >
                 Email Address
               </label>
             </div>
 
+            {/* Password Field with Proper Label */}
             <div className="relative group">
               <input 
                 type="password" 
-                id="password" 
+                id="password"
+                name="password" 
                 required 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
-                className="w-full py-3 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
+                className="w-full py-3 lg:py-4 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
                 placeholder="Password" 
               />
               <label 
                 htmlFor="password" 
-                className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm"
+                className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 lg:peer-placeholder-shown:top-4 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm"
               >
                 Password
               </label>
             </div>
             
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-400 text-sm text-center">{error}</p>
+              </div>
+            )}
 
-            <button type="submit" className="w-full py-3 lg:py-4 mt-4 bg-[#7F5AF0] hover:bg-[#6f4df7] text-white font-bold text-lg rounded-full shadow-lg hover:shadow-[#7F5AF0]/40 transition-all transform hover:-translate-y-1">
+            <button 
+              type="submit" 
+              className="w-full py-3.5 lg:py-4 mt-6 bg-[#7F5AF0] hover:bg-[#6f4df7] text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-[#7F5AF0]/40 transition-all transform hover:-translate-y-1 active:scale-95"
+            >
               Login
             </button>
 
-            <p className="text-center text-[#94A3B8] text-sm mt-4 lg:mt-6">
-              Don't have an account? <Link to="/register" className="text-[#00E0C7] font-medium hover:text-[#33ffea] transition-colors">Sign Up</Link>
+            <p className="text-center text-[#94A3B8] text-sm mt-6">
+              Don't have an account? <Link to="/register" className="text-[#00E0C7] font-medium hover:text-[#33ffea] transition-colors ml-1">Sign Up</Link>
             </p>
           </form>
         </div>
