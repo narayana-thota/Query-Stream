@@ -17,9 +17,9 @@ const LoginPage = () => {
   const formRef = useRef(null); 
   const resetTimer = useRef(null);
 
-  // --- ANIMATION LOGIC ---
+  // --- ANIMATION LOGIC (Performance Optimized) ---
   useEffect(() => {
-    // Only track mouse on Desktop (>1024px)
+    // Only track mouse on Desktop (>1024px) to prevent mobile lag/battery drain
     const isDesktop = window.innerWidth > 1024;
     if (!isDesktop) return;
 
@@ -30,6 +30,7 @@ const LoginPage = () => {
 
       if (logoRef.current) {
         logoRef.current.style.transition = 'none'; 
+        // Subtle rotation
         const rotateY = (x / window.innerWidth) * 15; 
         const rotateX = -(y / window.innerHeight) * 15; 
         logoRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
@@ -37,6 +38,7 @@ const LoginPage = () => {
 
       if (formRef.current) {
         formRef.current.style.transition = 'none'; 
+        // Subtle parallax translation
         formRef.current.style.transform = `translate3d(${x * -0.01}px, ${y * -0.01}px, 0px)`;
       }
 
@@ -90,35 +92,50 @@ const LoginPage = () => {
   };
 
   return (
-    // 🔧 LAYOUT FIX: 'min-h-screen' allows scrolling on small split-screens.
-    <div className="min-h-screen w-full bg-[#0A0D17] relative flex flex-col lg:flex-row overflow-x-hidden">
+    // 🔧 LAYOUT FIX: 'h-[100dvh]' handles mobile browser bars.
+    // 'overflow-hidden' on parent, specific overflow on children to prevent body scrollbar.
+    <div className="h-[100dvh] w-full bg-[#0A0D17] relative flex flex-col lg:flex-row overflow-hidden">
       
-      {/* BACKGROUND */}
+      {/* 🔧 CSS: Hide Scrollbars & Force Watermark Hidden */}
+      <style>{`
+        /* Hide Scrollbar for Chrome/Safari/Opera */
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        /* Hide Scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
+
+      {/* BACKGROUND (Fixed) */}
       <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
         <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-[#7F5AF0] rounded-full filter blur-[150px] opacity-20 animate-blob-slow"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-[#00E0C7] rounded-full filter blur-[150px] opacity-20 animate-blob-slow [animation-delay:-7s]"></div>
       </div>
 
       {/* --- LEFT COLUMN (3D LOGO) --- */}
-      <div className="w-full h-[40vh] lg:h-auto lg:w-[55%] flex flex-col justify-center items-center relative z-10 p-4 shrink-0 lg:min-h-screen">
+      {/* 🔧 FIX: Mobile: 40% height. Desktop: 55% width. Flex shrink 0 prevents collapse. */}
+      <div className="w-full h-[40vh] lg:h-full lg:w-[55%] flex flex-col justify-center items-center relative z-10 p-4 shrink-0">
         <div ref={logoRef} className="flex flex-col items-center justify-center w-full h-full will-change-transform">
           
-          {/* 🧠 WATERMARK NUKE (The Crop Technique) 
-             1. 'overflow-hidden' on the container acts as the "Frame".
-             2. The inner div is 'scale-125' (125% size).
-             3. This pushes the bottom-right corner (watermark) outside the frame.
+          {/* 🧠 WATERMARK NUKE: The "Crop & Zoom" Technique 
+             1. Parent: 'overflow-hidden' creates a frame.
+             2. Child: 'scale-[1.2]' zooms in by 20%.
+             3. Result: The watermark at the edge is pushed OUTSIDE the frame and clipped.
           */}
           <div className="w-full h-full max-h-[300px] lg:max-h-[600px] relative flex items-center justify-center overflow-hidden">
-             <div className="w-full h-full scale-[1.25] lg:scale-[1.2] flex items-center justify-center pointer-events-none">
+             <div className="w-full h-full scale-[1.25] flex items-center justify-center">
                 <Suspense fallback={<div className="text-center text-[#4A4E69] text-sm animate-pulse">Loading 3D Experience...</div>}>
                   <Spline scene="https://prod.spline.design/0rhIHPz8KM935PuI/scene.splinecode" />
                 </Suspense>
              </div>
           </div>
           
-          {/* Title Text */}
-          <div className="text-center mt-[-20px] z-20 relative pointer-events-auto">
-            <h1 className="text-3xl lg:text-6xl font-bold text-white tracking-tight">
+          {/* Title Text - Positioned relatively to stack below the 3D scene cleanly */}
+          <div className="text-center mt-[-10px] lg:mt-[-20px] z-20 relative pointer-events-auto">
+            <h1 className="text-3xl lg:text-6xl font-bold text-white tracking-tight drop-shadow-lg">
               QueryStream
             </h1>
             <p className="text-sm lg:text-xl text-[#94A3B8] mt-2 font-light">
@@ -129,9 +146,9 @@ const LoginPage = () => {
       </div>
 
       {/* --- RIGHT COLUMN (LOGIN FORM) --- */}
-      {/* 🔧 FIX: 'flex-1' allows it to grow. 'py-8' ensures spacing on small screens. */}
-      <div className="w-full flex-1 lg:w-[45%] flex flex-col justify-center items-center relative z-10 p-6 lg:p-12 lg:pl-0 bg-transparent lg:min-h-screen">
-        <div ref={formRef} className="w-full max-w-sm lg:max-w-md mx-auto will-change-transform"> 
+      {/* 🔧 FIX: 'overflow-y-auto' allows this section to scroll independently if content overflows (split screen) */}
+      <div className="w-full flex-1 lg:h-full lg:w-[45%] flex flex-col justify-center items-center relative z-10 p-6 lg:p-12 lg:pl-0 bg-transparent overflow-y-auto no-scrollbar">
+        <div ref={formRef} className="w-full max-w-sm lg:max-w-md mx-auto will-change-transform pb-8 lg:pb-0"> 
           
           <div className="mb-8 text-center lg:text-left">
             <h2 className="text-3xl lg:text-5xl font-bold text-white mb-2">Welcome Back</h2>
@@ -140,12 +157,10 @@ const LoginPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* Email Field with Proper Label */}
             <div className="relative group">
               <input 
                 type="email" 
                 id="email" 
-                name="email"
                 required 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
@@ -160,12 +175,10 @@ const LoginPage = () => {
               </label>
             </div>
 
-            {/* Password Field with Proper Label */}
             <div className="relative group">
               <input 
                 type="password" 
-                id="password"
-                name="password" 
+                id="password" 
                 required 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
