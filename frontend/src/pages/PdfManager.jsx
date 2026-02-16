@@ -1,9 +1,7 @@
-// frontend/src/pages/PDFManagerPage.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
-import API_BASE_URL from '../config'; // ✅ IMPORTED CONFIG
+import API_BASE_URL from '../config'; 
 import { 
   FileText, Upload, Send, Bot, User, Loader, 
   CheckCircle2, AlertCircle, Sparkles, MessageSquare, Menu
@@ -28,9 +26,10 @@ const PDFManagerPage = ({ toggleSidebar }) => {
   // User Info
   const [user, setUser] = useState({ name: 'User', email: 'user@example.com', initials: 'U' });
 
-  const chatEndRef = useRef(null);
+  // 1. FIX: Ref for the CONTAINER, not an element at the bottom
+  const chatContainerRef = useRef(null);
 
-  // ✅ AUTH HELPER: Get Header with Token
+  // AUTH HELPER
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
     return { 
@@ -39,53 +38,37 @@ const PDFManagerPage = ({ toggleSidebar }) => {
     };
   };
 
-  // --- 1. INITIAL LOAD ---
+  // --- INITIAL LOAD ---
   useEffect(() => {
     // Load User
     const storedName = localStorage.getItem('userName') || 'User';
-    const storedEmail = localStorage.getItem('userEmail') || localStorage.getItem('email') || 'user@example.com';
+    const storedEmail = localStorage.getItem('userEmail') || 'user@example.com';
     
-    // Clean the name - remove numbers and clean up
-    let displayName = storedName;
+    let displayName = storedName.replace(/[0-9]/g, ''); 
+    if (displayName) displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
     
-    // If name contains numbers or @ symbol, extract from email
-    if (storedName === 'User' || storedName.includes('@') || /\d/.test(storedName)) {
-      let tempName = storedEmail.split('@')[0];
-      tempName = tempName.replace(/[0-9]/g, ''); // Remove numbers
-      if (tempName) {
-        displayName = tempName.charAt(0).toUpperCase() + tempName.slice(1);
-      }
-    }
-    
-    // Generate initials from the clean name
     const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-    
     setUser({ name: displayName, email: storedEmail, initials });
 
-    // ⚠️ Check for PDF passed from Dashboard
+    // Check for PDF from Dashboard
     if (location.state && location.state.activePdf) {
         const { activePdf } = location.state;
-        
-        // Store the data but DO NOT analyze yet
         setDashboardPdfData(activePdf);
-        
-        // Mock a file object so the UI shows the name
         setFile({ name: activePdf.filename || activePdf.originalName || 'Document.pdf' });
-        
-        // Set ID
         setPdfId(activePdf._id || activePdf.id);
-        
-        // Set status to READY (Waiting for user to click Analyze)
         setStatus('ready');
     }
   }, [location]);
 
-  // Auto-scroll chat
+  // 2. FIX: SCROLL LOGIC - Only scroll the chat box, NEVER the window
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+        // This is the clean, non-intrusive way to scroll a chat window
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [chatHistory, isChatLoading]); 
 
-  // --- 2. FILE HANDLERS ---
+  // --- FILE HANDLERS ---
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected && selected.type === 'application/pdf') {
@@ -93,7 +76,7 @@ const PDFManagerPage = ({ toggleSidebar }) => {
       setStatus('ready');
       setSummary(''); 
       setPdfId(null);
-      setDashboardPdfData(null); // Clear dashboard data if user picks new file
+      setDashboardPdfData(null); 
       setChatHistory([{ role: 'ai', content: 'Document ready. Click "Analyze Document" to begin.' }]);
     } else {
       alert("Please upload a valid PDF file.");
@@ -105,9 +88,8 @@ const PDFManagerPage = ({ toggleSidebar }) => {
 
     setStatus('analyzing');
 
-    // ⚠️ SCENARIO A: FROM DASHBOARD (Already uploaded)
+    // SCENARIO A: FROM DASHBOARD
     if (dashboardPdfData && pdfId) {
-        // Simulate "Processing" delay for better UX
         setTimeout(() => {
             setSummary(dashboardPdfData.summary || "Summary not available.");
             setStatus('complete');
@@ -116,12 +98,11 @@ const PDFManagerPage = ({ toggleSidebar }) => {
         return;
     }
 
-    // ⚠️ SCENARIO B: NEW UPLOAD
+    // SCENARIO B: NEW UPLOAD
     const formData = new FormData();
     formData.append('pdf', file);
 
     try {
-      // ✅ Uses API_BASE_URL + Token (Special Header for Multipart)
       const res = await axios.post(`${API_BASE_URL}/api/pdf/upload`, formData, {
         headers: { 
             'Content-Type': 'multipart/form-data',
@@ -131,7 +112,6 @@ const PDFManagerPage = ({ toggleSidebar }) => {
       });
 
       const { summary: returnedSummary, _id } = res.data;
-      
       setSummary(returnedSummary);
       setPdfId(_id); 
       setStatus('complete');
@@ -146,7 +126,7 @@ const PDFManagerPage = ({ toggleSidebar }) => {
     }
   };
 
-  // --- 3. CHAT HANDLER ---
+  // --- CHAT HANDLER ---
   const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (!chatInput.trim() || !pdfId) return; 
@@ -158,7 +138,6 @@ const PDFManagerPage = ({ toggleSidebar }) => {
     setChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
 
     try {
-      // ✅ Uses API_BASE_URL + Token
       const res = await axios.post(`${API_BASE_URL}/api/pdf/chat`, {
         pdfId: pdfId,
         question: userMsg
@@ -191,8 +170,8 @@ const PDFManagerPage = ({ toggleSidebar }) => {
     }
   };
 
-  // 🔧 FIX: Added 'overflow-x-hidden' to main wrapper
   return (
+    // 3. FIX: Structure matches Dashboard exactly
     <div className="h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 flex flex-col overflow-hidden">
       
       {/* Custom Scrollbar Styles */}
@@ -220,15 +199,10 @@ const PDFManagerPage = ({ toggleSidebar }) => {
         }
       `}</style>
       
-      {/* HEADER - Fixed at top */}
+      {/* HEADER */}
       <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] flex-shrink-0 border-b border-gray-800 z-50">
         <div className="flex items-center gap-3 md:gap-4">
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-[#94A3B8] hover:text-white p-2 -ml-2"
-            onClick={toggleSidebar}
-            aria-label="Toggle menu"
-          >
+          <button className="md:hidden text-[#94A3B8] hover:text-white p-1" onClick={toggleSidebar}>
             <Menu size={24} />
           </button>
           
@@ -240,16 +214,11 @@ const PDFManagerPage = ({ toggleSidebar }) => {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <div className="flex items-center gap-2 md:gap-3 pl-3 md:pl-6 border-l border-gray-800">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 pl-3 md:pl-6 border-l border-gray-800">
             <div className="text-right">
-              {/* 🔧 FIX: Truncate Name & Hide Email on Mobile to prevent overflow */}
-              <p className="text-xs md:text-sm font-bold text-white leading-tight truncate max-w-[100px] md:max-w-none">
-                {user.name}
-              </p>
-              <p className="text-[9px] md:text-xs text-gray-500 break-all hidden sm:block">
-                {user.email}
-              </p>
+              <p className="text-xs md:text-sm font-bold text-white leading-tight truncate max-w-[100px] md:max-w-none">{user.name}</p>
+              <p className="text-[10px] md:text-xs text-gray-500 hidden sm:block">{user.email}</p>
             </div>
             <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-white text-xs md:text-sm font-bold shadow-lg ring-2 ring-[#0A0D17]">
               {user.initials}
@@ -261,7 +230,6 @@ const PDFManagerPage = ({ toggleSidebar }) => {
       {/* CONTENT - Scrollable Area */}
       <div className="flex-1 overflow-y-auto page-scroll overflow-x-hidden">
         <div className="px-4 md:px-8 py-4 md:py-8 max-w-[1600px] mx-auto">
-          {/* 🔧 FIX: Adjusted bottom padding to match Dashboard */}
           <div className="flex flex-col gap-4 md:gap-6 pb-6 md:pb-0">
             
             {/* TOP ROW: UPLOADER + SUMMARY */}
@@ -367,7 +335,11 @@ const PDFManagerPage = ({ toggleSidebar }) => {
                 </h2>
 
                 {/* Chat Messages */}
-                <div className="overflow-y-auto pr-2 space-y-3 md:space-y-4 mb-3 md:mb-4 chat-scroll max-h-[300px] md:max-h-[400px]">
+                {/* 2. FIX: Assigned ref to the container for stable scrolling */}
+                <div 
+                    ref={chatContainerRef}
+                    className="overflow-y-auto pr-2 space-y-3 md:space-y-4 mb-3 md:mb-4 chat-scroll max-h-[300px] md:max-h-[400px]"
+                >
                   {chatHistory.map((msg, idx) => (
                     <div key={idx} className={`flex gap-2 md:gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       {msg.role === 'ai' && <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#00E0C7]/10 flex items-center justify-center text-[#00E0C7] flex-shrink-0 mt-1"><Bot size={14} className="md:w-4 md:h-4" /></div>}
@@ -385,7 +357,6 @@ const PDFManagerPage = ({ toggleSidebar }) => {
                       </div>
                     </div>
                   )}
-                  <div ref={chatEndRef} />
                 </div>
 
                 {/* Chat Input */}

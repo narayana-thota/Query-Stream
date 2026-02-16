@@ -6,16 +6,18 @@ import API_BASE_URL from '../config';
 import {
   CheckSquare, FileText, Plus,
   Trash2, Check, Play, AudioLines, Clock,
-  MoreVertical, Flag, Menu, Upload, Loader2, Calendar, Layout
+  MoreVertical, Flag, Menu, Upload, Loader2, Calendar, LayoutGrid
 } from 'lucide-react';
 
 const Dashboard = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   
-  // --- STATE ---
+  // --- STATE (Initialized with Default/Empty values for "Instant Shell") ---
   const [todos, setTodos] = useState([]);
   const [newTask, setNewTask] = useState('');
   const [priority, setPriority] = useState('Medium'); 
+  // NOTE: We keep 'loading' state, but we WON'T use it to block the UI.
+  // We only use it if we want to show a tiny spinner somewhere specific.
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState({ name: 'User', email: 'user@example.com', initials: 'U' });
   const [greeting, setGreeting] = useState('Good Morning');
@@ -86,8 +88,8 @@ const Dashboard = ({ toggleSidebar }) => {
   const getSortedTodos = () => {
     const priorityWeight = { 'High': 3, 'Medium': 2, 'Low': 1 };
     return [...todos].sort((a, b) => {
-        const dateA = new Date(a.createdAt || a.date || new Date()); 
-        const dateB = new Date(b.createdAt || b.date || new Date());
+        const dateA = new Date(a.createdAt); 
+        const dateB = new Date(b.createdAt);
         
         if (dateB.getTime() !== dateA.getTime()) {
             return dateB.getTime() - dateA.getTime();
@@ -118,77 +120,124 @@ const Dashboard = ({ toggleSidebar }) => {
           initials: getInitials(storedName || 'User')
         });
 
-        const todoRes = await axios.get(`${API_BASE_URL}/api/todos`, getAuthHeader());
-        const todosWithDates = todoRes.data.map(t => ({
-            ...t, 
-            createdAt: t.createdAt || t.date || new Date().toISOString() 
-        }));
-        setTodos(todosWithDates);
+        const [todoRes, pdfRes, podcastRes] = await Promise.allSettled([
+            axios.get(`${API_BASE_URL}/api/todos`, getAuthHeader()),
+            axios.get(`${API_BASE_URL}/api/pdf`, getAuthHeader()),
+            axios.get(`${API_BASE_URL}/api/podcast`, getAuthHeader())
+        ]);
 
-        const pdfRes = await axios.get(`${API_BASE_URL}/api/pdf`, getAuthHeader());
-        const pdfData = Array.isArray(pdfRes.data) ? pdfRes.data : []; 
-        const processedPdfs = pdfData.map(p => ({
-            ...p, 
-            date: p.date || p.createdAt || new Date().toISOString() 
-        }));
-        setRecentPdfs(processedPdfs); 
+        let currentTodos = [];
+        if (todoRes.status === 'fulfilled') {
+            currentTodos = todoRes.value.data.map(t => ({
+                ...t, 
+                createdAt: t.createdAt || t.date || new Date().toISOString() 
+            }));
+            setTodos(currentTodos);
+        }
 
-        try {
-            const podcastRes = await axios.get(`${API_BASE_URL}/api/podcast`, getAuthHeader());
-            const podcastData = Array.isArray(podcastRes.data) ? podcastRes.data : [];
-            const processedPodcasts = podcastData.map(p => ({
+        let currentPdfs = [];
+        if (pdfRes.status === 'fulfilled') {
+            const pdfData = Array.isArray(pdfRes.value.data) ? pdfRes.value.data : [];
+            currentPdfs = pdfData.map(p => ({
+                ...p, 
+                date: p.date || p.createdAt || new Date().toISOString() 
+            }));
+            setRecentPdfs(currentPdfs);
+        }
+
+        let currentPodcasts = [];
+        if (podcastRes.status === 'fulfilled') {
+            const podcastData = Array.isArray(podcastRes.value.data) ? podcastRes.value.data : [];
+            currentPodcasts = podcastData.map(p => ({
                 ...p,
                 date: p.createdAt || p.date || new Date().toISOString()
             }));
-            processedPodcasts.sort((a, b) => new Date(b.date) - new Date(a.date));
-            setRecentPodcasts(processedPodcasts); 
-            setStats(prev => ({ ...prev, totalPodcasts: podcastData.length }));
-        } catch (e) { console.log("Podcasts API silent fail"); }
+            currentPodcasts.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setRecentPodcasts(currentPodcasts);
+        }
 
-        setStats(prev => ({ ...prev, pendingTasks: todoRes.data.filter(t => !t.completed).length, totalPdfs: pdfData.length }));
+        setStats({ 
+            pendingTasks: currentTodos.filter(t => !t.completed).length, 
+            totalPdfs: currentPdfs.length, 
+            totalPodcasts: currentPodcasts.length 
+        });
 
       } catch (error) {
         if (error.response && error.response.status === 401) {
             localStorage.clear();
-            navigate('/login');
+            window.location.href = '/login'; 
         }
-      } finally { setLoading(false); }
+      } finally { 
+          setLoading(false);
+      }
     };
     fetchData();
   }, [navigate]);
 
-  // --- ACTIONS ---
+  // --- OPTIMISTIC ACTIONS ---
+  
   const handleAddTask = async (e) => {
     if (e.key === 'Enter' && newTask.trim()) {
+      // 1. UI Update (Instant)
+      const tempId = Date.now().toString(); 
+      const now = new Date().toISOString();
+      const taskPayload = { 
+          _id: tempId, 
+          text: newTask, 
+          completed: false, 
+          priority: priority, 
+          createdAt: now 
+      };
+
+      setTodos(prev => [taskPayload, ...prev]);
+      setStats(prev => ({ ...prev, pendingTasks: prev.pendingTasks + 1 }));
+      setNewTask(''); 
+      setPriority('Medium');
+
+      // 2. Server Update (Background)
       try {
-        const now = new Date().toISOString();
         const res = await axios.post(`${API_BASE_URL}/api/todos`, 
-          { text: newTask, completed: false, priority: priority, createdAt: now },
+          { text: taskPayload.text, completed: false, priority: taskPayload.priority, createdAt: now },
           getAuthHeader()
         );
-        setTodos([...todos, { ...res.data, createdAt: now }]);
-        setStats(prev => ({ ...prev, pendingTasks: prev.pendingTasks + 1 }));
-        setNewTask(''); setPriority('Medium');
-      } catch (error) { console.error(error); }
+        setTodos(prev => prev.map(t => t._id === tempId ? { ...res.data, createdAt: now } : t));
+      } catch (error) { 
+          console.error("Task add failed", error);
+          setTodos(prev => prev.filter(t => t._id !== tempId));
+          setStats(prev => ({ ...prev, pendingTasks: prev.pendingTasks - 1 }));
+      }
     }
   };
 
   const handleDeleteTask = async (id) => {
+    const prevTodos = [...todos];
+    const isCompleted = prevTodos.find(t => t._id === id)?.completed;
+    
+    setTodos(prev => prev.filter(t => t._id !== id));
+    if (!isCompleted) setStats(prev => ({ ...prev, pendingTasks: prev.pendingTasks - 1 }));
+
     try {
       await axios.delete(`${API_BASE_URL}/api/todos/${id}`, getAuthHeader());
-      const newTodos = todos.filter(task => task._id !== id);
-      setTodos(newTodos);
-      setStats(prev => ({ ...prev, pendingTasks: newTodos.filter(t => !t.completed).length }));
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error(error);
+        setTodos(prevTodos); 
+        if (!isCompleted) setStats(prev => ({ ...prev, pendingTasks: prev.pendingTasks + 1 }));
+    }
   };
 
   const toggleComplete = async (id, currentStatus) => {
+    const prevTodos = [...todos];
+    
+    setTodos(prev => prev.map(t => t._id === id ? { ...t, completed: !currentStatus } : t));
+    setStats(prev => ({ ...prev, pendingTasks: !currentStatus ? prev.pendingTasks - 1 : prev.pendingTasks + 1 }));
+
     try {
-      const newTodos = todos.map(t => t._id === id ? { ...t, completed: !currentStatus } : t);
-      setTodos(newTodos);
-      setStats(prev => ({ ...prev, pendingTasks: newTodos.filter(t => !t.completed).length }));
       await axios.put(`${API_BASE_URL}/api/todos/${id}`, { completed: !currentStatus }, getAuthHeader());
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error(error);
+        setTodos(prevTodos); 
+        setStats(prev => ({ ...prev, pendingTasks: !currentStatus ? prev.pendingTasks + 1 : prev.pendingTasks - 1 }));
+    }
   };
 
   const handlePdfUpload = async (e) => {
@@ -216,22 +265,32 @@ const Dashboard = ({ toggleSidebar }) => {
 
   const handleDeletePdf = async (e, id) => {
       e.preventDefault(); e.stopPropagation(); 
+      const prevPdfs = [...recentPdfs];
+      setRecentPdfs(prev => prev.filter(p => (p._id || p.id) !== id));
+      setStats(prev => ({...prev, totalPdfs: prev.totalPdfs - 1}));
+      setOpenPdfMenu(null);
+
       try {
           await axios.delete(`${API_BASE_URL}/api/pdf/${id}`, getAuthHeader());
-          setRecentPdfs(recentPdfs.filter(p => (p._id || p.id) !== id));
-          setStats(prev => ({...prev, totalPdfs: prev.totalPdfs - 1}));
-          setOpenPdfMenu(null);
-      } catch (error) { console.error("Error deleting PDF", error); }
+      } catch (error) { 
+          setRecentPdfs(prevPdfs);
+          setStats(prev => ({...prev, totalPdfs: prev.totalPdfs + 1}));
+      }
   };
 
   const handleDeletePodcast = async (e, id) => {
       e.preventDefault(); e.stopPropagation();
+      const prevPodcasts = [...recentPodcasts];
+      setRecentPodcasts(prev => prev.filter(p => (p._id || p.id) !== id));
+      setStats(prev => ({...prev, totalPodcasts: prev.totalPodcasts - 1}));
+      setOpenPodcastMenu(null);
+
       try {
           await axios.delete(`${API_BASE_URL}/api/podcast/${id}`, getAuthHeader());
-          setRecentPodcasts(recentPodcasts.filter(p => (p._id || p.id) !== id));
-          setStats(prev => ({...prev, totalPodcasts: prev.totalPodcasts - 1}));
-          setOpenPodcastMenu(null);
-      } catch (error) { console.error("Error deleting podcast", error); }
+      } catch (error) { 
+          setRecentPodcasts(prevPodcasts);
+          setStats(prev => ({...prev, totalPodcasts: prev.totalPodcasts + 1}));
+      }
   };
 
   const handleOpenPdf = (pdf) => {
@@ -240,7 +299,7 @@ const Dashboard = ({ toggleSidebar }) => {
 
   // --- SUB-COMPONENTS ---
   const RecentPDFsList = () => (
-    <div className="bg-[#11141D] rounded-2xl border border-white/10 p-6 flex flex-col h-full animate-in fade-in duration-500 relative overflow-hidden group hover:border-[#00E0C7]/50 transition-all duration-300">
+    <div className="bg-[#11141D] rounded-2xl border border-white/10 p-6 flex flex-col h-full relative overflow-hidden group hover:border-[#00E0C7]/50 transition-all duration-300">
         <input type="file" ref={fileInputRef} onChange={handlePdfUpload} accept="application/pdf" className="hidden" />
         <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#00E0C7] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
         <div className="relative z-10 flex flex-col h-full">
@@ -253,7 +312,7 @@ const Dashboard = ({ toggleSidebar }) => {
                     </div>
                 )}
             </div>
-            <div className="flex-1 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden">
+            <div className="flex-1 overflow-y-auto pr-1 no-scrollbar">
                 {recentPdfs.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center gap-5">
                         <div className="w-16 h-16 rounded-full bg-[#1F2937] flex items-center justify-center text-[#94A3B8] border border-white/5 shadow-inner"><FileText size={32} /></div>
@@ -291,7 +350,7 @@ const Dashboard = ({ toggleSidebar }) => {
   );
 
   const RecentPodcastsList = () => (
-    <div className="bg-[#11141D] rounded-2xl border border-white/10 p-6 flex flex-col h-full animate-in fade-in duration-500 relative overflow-hidden group hover:border-[#7F5AF0]/50 transition-all duration-300">
+    <div className="bg-[#11141D] rounded-2xl border border-white/10 p-6 flex flex-col h-full relative overflow-hidden group hover:border-[#7F5AF0]/50 transition-all duration-300">
       <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
       <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
@@ -303,7 +362,7 @@ const Dashboard = ({ toggleSidebar }) => {
                 </div>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1 [&::-webkit-scrollbar]:hidden">
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1 no-scrollbar">
             {recentPodcasts.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center gap-5">
                 <div className="w-16 h-16 rounded-full bg-[#1F2937] flex items-center justify-center text-[#94A3B8] border border-white/5 shadow-inner"><AudioLines size={32} /></div>
@@ -337,19 +396,27 @@ const Dashboard = ({ toggleSidebar }) => {
   );
 
   return (
-    // 🔧 FIX: overflow-x-hidden, reduced bottom padding (pb-6), consistent gaps
-    <div className="h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 flex flex-col overflow-hidden">
+    <div className="h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 flex flex-col overflow-hidden relative">
       
+      {/* 1. CSS to HIDE SCROLLBAR */}
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
       {/* HEADER: Fixed (Sticky) */}
-      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] flex-shrink-0 border-b border-gray-800 z-50">
+      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17]/95 backdrop-blur-md flex-shrink-0 border-b border-gray-800 z-50">
         <div className="flex items-center gap-3">
              <button className="md:hidden text-[#94A3B8] hover:text-white p-1" onClick={toggleSidebar}><Menu size={24} /></button>
+             {/* HEADER ICON ADDED */}
+             <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-[#7F5AF0]/10 flex items-center justify-center border border-[#7F5AF0]/20 shadow-lg shadow-[#7F5AF0]/5">
+                <LayoutGrid size={20} className="text-[#7F5AF0] md:w-6 md:h-6" />
+             </div>
             <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">Dashboard</h1>
         </div>
         <div className="flex items-center gap-4 md:gap-6 shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end">
-              {/* Hide email on mobile */}
               <span className="text-sm font-bold text-white leading-none truncate max-w-[100px] md:max-w-none">{user.name.replace(/[0-9]/g, '')}</span>
               <span className="text-[11px] text-[#94A3B8] font-medium mt-1 hidden sm:block">{user.email}</span>
             </div>
@@ -358,11 +425,12 @@ const Dashboard = ({ toggleSidebar }) => {
         </div>
       </header>
 
-      {/* SCROLLABLE CONTENT AREA */}
-      <div className="flex-1 overflow-y-auto page-scroll">
+      {/* SCROLLABLE CONTENT AREA - NO BLOCKING LOADER */}
+      <div className="flex-1 overflow-y-auto no-scrollbar relative z-10">
         <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8 pb-6 md:pb-8">
             <section className="relative w-full rounded-2xl overflow-hidden p-5 md:p-8 shadow-2xl shadow-[#7F5AF0]/10 border border-white/5">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#7F5AF0] to-[#00E0C7] opacity-10"></div>
+                {/* Kept static glow here (Visual interest for header card only) */}
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-20 group-hover:opacity-30 transition-opacity duration-700"></div>
                 <div className="relative z-10">
                 <h2 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">{greeting}, {user.name.replace(/[0-9]/g, '').split(' ')[0]}! 👋</h2>
@@ -370,33 +438,26 @@ const Dashboard = ({ toggleSidebar }) => {
                 </div>
             </section>
 
-            {/* 🔧 FIX: Stats Grid - 3 cols on Mobile (Same Row), Glassmorphism Box for Icon */}
             <div className="grid grid-cols-3 gap-2 md:gap-6">
-                {/* PENDING CARD */}
                 <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2 text-center">
                     <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold">PENDING</p>
                     <h3 className={`text-xl md:text-4xl font-black ${stats.pendingTasks > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.pendingTasks}</h3>
-                    {/* Glassmorphism Icon Box */}
                     <div className="p-2 rounded-lg bg-[#1F2937]/50 border border-white/10 text-[#7F5AF0] backdrop-blur-sm shadow-inner">
                         <CheckSquare size={16} className="md:w-6 md:h-6" />
                     </div>
                 </div>
 
-                {/* PDFS CARD */}
                 <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2 text-center">
                     <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold">PDFS</p>
                     <h3 className={`text-xl md:text-4xl font-black ${stats.totalPdfs > 0 ? 'text-[#00E0C7]' : 'text-white'}`}>{stats.totalPdfs}</h3>
-                    {/* Glassmorphism Icon Box */}
                     <div className="p-2 rounded-lg bg-[#1F2937]/50 border border-white/10 text-[#00E0C7] backdrop-blur-sm shadow-inner">
                         <FileText size={16} className="md:w-6 md:h-6" />
                     </div>
                 </div>
 
-                {/* PODCASTS CARD */}
                 <div className="bg-[#11141D] border border-white/5 p-2 md:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2 text-center">
                     <p className="text-[#94A3B8] text-[9px] md:text-xs uppercase tracking-widest font-bold">PODCASTS</p>
                     <h3 className={`text-xl md:text-4xl font-black ${stats.totalPodcasts > 0 ? 'text-[#7F5AF0]' : 'text-white'}`}>{stats.totalPodcasts}</h3>
-                    {/* Glassmorphism Icon Box */}
                     <div className="p-2 rounded-lg bg-[#1F2937]/50 border border-white/10 text-[#7F5AF0] backdrop-blur-sm shadow-inner">
                         <AudioLines size={16} className="md:w-6 md:h-6" />
                     </div>
@@ -410,7 +471,6 @@ const Dashboard = ({ toggleSidebar }) => {
                     <Link to="/todo" className="text-sm text-[#7F5AF0] hover:text-[#00E0C7] font-medium">See All</Link>
                 </div>
                 
-                {/* 🔧 FIX: Priority Focus Box - Added padding so focus ring isn't cut */}
                 <div className="relative mb-4 md:mb-6">
                     <div className="relative mb-3">
                         <Plus className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
@@ -428,11 +488,14 @@ const Dashboard = ({ toggleSidebar }) => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto space-y-2 md:space-y-3 pr-1 [&::-webkit-scrollbar]:hidden">
+                <div className="flex-1 overflow-y-auto space-y-2 md:space-y-3 pr-1 no-scrollbar">
                     {todos.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-gray-500 opacity-60">
-                            <Layout size={40} className="mb-2" />
-                            <p className="text-sm">No recent tasks found.</p>
+                            <div className="w-16 h-16 rounded-full bg-[#1F2937]/50 flex items-center justify-center mb-3">
+                                <CheckSquare size={32} className="text-[#94A3B8]" />
+                            </div>
+                            <p className="text-base font-medium text-white">All caught up!</p>
+                            <p className="text-xs text-[#94A3B8]">No pending tasks for today.</p>
                         </div>
                     ) : (
                         getSortedTodos().map((task) => (

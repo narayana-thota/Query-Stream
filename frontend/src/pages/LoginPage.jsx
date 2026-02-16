@@ -5,37 +5,31 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import API_BASE_URL from '../config'; 
 
-// --- CUSTOM LOGO COMPONENT (Replaces Spline) ---
+// --- CUSTOM LOGO COMPONENT ---
+// STRICTLY UNTOUCHED
 const CustomLogo = () => {
   return (
-    <svg width="100%" height="100%" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-2xl">
-      {/* DEFINITIONS FOR GRADIENTS (3D Effect) */}
+    <svg width="100%" height="100%" viewBox="0 0 600 500" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-2xl">
       <defs>
-        {/* Purple Sphere Gradient */}
-        <radialGradient id="sphereGrad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(140 160) rotate(50) scale(140)">
-          <stop stopColor="#9F7AEA" /> {/* Light Purple Highlight */}
-          <stop offset="1" stopColor="#5B21B6" /> {/* Dark Purple Shadow */}
-        </radialGradient>
-        
-        {/* Teal Bars Gradient */}
-        <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop stopColor="#2DD4BF" /> {/* Teal Highlight */}
-          <stop offset="1" stopColor="#0F766E" /> {/* Teal Shadow */}
+        <linearGradient id="sphereGrad" x1="0.2" y1="0.2" x2="0.8" y2="0.8">
+          <stop offset="0%" stopColor="#8B5CF6" />   
+          <stop offset="100%" stopColor="#5B21B6" /> 
         </linearGradient>
+        <linearGradient id="beamGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#2DD4BF" />   
+          <stop offset="100%" stopColor="#0F766E" /> 
+        </linearGradient>
+        <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
       </defs>
-
-      {/* 1. THE PURPLE SPHERE */}
-      <circle cx="150" cy="200" r="90" fill="url(#sphereGrad)" />
-
-      {/* 2. THE TEAL BEAMS (Angled to match your design) */}
-      {/* Top Bar */}
-      <rect x="260" y="110" width="160" height="40" rx="20" transform="rotate(15 260 110)" fill="#00E0C7" />
-      
-      {/* Middle Bar */}
-      <rect x="270" y="180" width="160" height="40" rx="20" fill="#00E0C7" />
-      
-      {/* Bottom Bar */}
-      <rect x="260" y="250" width="160" height="40" rx="20" transform="rotate(-15 260 250)" fill="#00E0C7" />
+      <g filter="url(#softGlow)">
+        <circle cx="200" cy="250" r="110" fill="url(#sphereGrad)" />
+        <rect x="310" y="225" width="210" height="50" rx="25" fill="url(#beamGrad)" />
+        <rect x="310" y="115" width="210" height="50" rx="25" transform="rotate(16 310 115)" fill="url(#beamGrad)" />
+        <rect x="310" y="335" width="210" height="50" rx="25" transform="rotate(-16 310 385)" fill="url(#beamGrad)" />
+      </g>
     </svg>
   );
 };
@@ -46,7 +40,6 @@ const LoginPage = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // --- HANDLE SUBMIT ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -77,33 +70,48 @@ const LoginPage = () => {
   };
 
   return (
-    // 🔧 LAYOUT: min-h-screen handles content overflow naturally
-    <div className="min-h-screen w-full bg-[#0A0D17] relative flex flex-col lg:flex-row overflow-x-hidden">
+    <div className="min-h-screen w-full bg-[#0A0D17] relative flex justify-center items-center overflow-x-hidden overflow-y-auto no-scrollbar py-10 lg:py-0">
       
-      {/* 🔧 CSS: Hide Scrollbars for cleaner look */}
       <style>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* 1. SCROLLBAR HIDE (Universal) */
+        ::-webkit-scrollbar { width: 0px !important; display: none !important; background: transparent; }
+        * { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+
+        /* 2. AUTOFILL BACKGROUND FIX */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #0A0D17 inset !important;
+            -webkit-text-fill-color: white !important;
+            transition: background-color 600000s ease-in-out 0s !important;
+        }
+
+        /* 3. AUTOFILL LABEL FIX (Crucial Step) */
+        /* This rule forces the label to float UP if the input is autofilled */
+        input:-webkit-autofill + label {
+            top: -0.875rem !important; /* Matches -top-3.5 */
+            font-size: 0.75rem !important; /* Matches text-xs */
+            color: #7F5AF0 !important; /* Matches peer-focus color */
+        }
       `}</style>
 
-      {/* BACKGROUND (Fixed) */}
+      {/* BACKGROUND */}
       <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
         <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-[#7F5AF0] rounded-full filter blur-[150px] opacity-20 animate-blob-slow"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-[#00E0C7] rounded-full filter blur-[150px] opacity-20 animate-blob-slow [animation-delay:-7s]"></div>
       </div>
 
-      {/* --- LEFT COLUMN (CUSTOM LOGO) --- */}
-      {/* Replaced Spline with the new CustomLogo component */}
-      <div className="w-full h-[40vh] lg:h-auto lg:w-[55%] flex flex-col justify-center items-center relative z-10 p-4 shrink-0 lg:min-h-screen">
-        <div className="flex flex-col items-center justify-center w-full h-full">
-          
-          {/* Logo Container */}
-          <div className="w-[280px] h-[280px] lg:w-[500px] lg:h-[500px] relative flex items-center justify-center animate-in fade-in zoom-in duration-700">
+      {/* --- MAIN CONTAINER --- */}
+      <div className="w-full max-w-[1200px] flex flex-col lg:flex-row items-center justify-center relative z-10 gap-8 lg:gap-0">
+
+        {/* --- LEFT COLUMN (LOGO) --- */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-4">
+          <div className="w-[280px] h-[280px] lg:w-[500px] lg:h-[400px] relative flex items-center justify-center animate-in fade-in zoom-in duration-700">
              <CustomLogo />
           </div>
           
-          {/* Title Text */}
-          <div className="text-center mt-[-20px] lg:mt-[-40px] z-20 relative">
+          <div className="text-center mt-[-30px] lg:mt-[-50px] z-20 relative">
             <h1 className="text-3xl lg:text-6xl font-bold text-white tracking-tight drop-shadow-xl">
               QueryStream
             </h1>
@@ -112,76 +120,74 @@ const LoginPage = () => {
             </p>
           </div>
         </div>
-      </div>
 
-      {/* --- RIGHT COLUMN (LOGIN FORM) --- */}
-      <div className="w-full flex-1 lg:h-full lg:w-[45%] flex flex-col justify-center items-center relative z-10 p-6 lg:p-12 lg:pl-0 bg-transparent lg:min-h-screen">
-        <div className="w-full max-w-sm lg:max-w-md mx-auto pb-8 lg:pb-0"> 
-          
-          <div className="mb-8 text-center lg:text-left">
-            <h2 className="text-3xl lg:text-5xl font-bold text-white mb-2">Welcome Back</h2>
-            <p className="text-sm lg:text-lg text-[#94A3B8]">Log in to continue your flow.</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* --- RIGHT COLUMN (LOGIN FORM) --- */}
+        <div className="w-full lg:w-1/2 flex justify-center items-center p-6 lg:p-12">
+          <div className="w-full max-w-sm lg:max-w-md lg:translate-x-16"> 
             
-            {/* Email Field */}
-            <div className="relative group">
-              <input 
-                type="email" 
-                id="email" 
-                name="email"
-                required 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                className="w-full py-3 lg:py-4 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
-                placeholder="Email Address" 
-              />
-              <label 
-                htmlFor="email" 
-                className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 lg:peer-placeholder-shown:top-4 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm"
-              >
-                Email Address
-              </label>
+            <div className="mb-8 text-center lg:text-left">
+              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-2">Welcome Back</h2>
+              <p className="text-sm lg:text-lg text-[#94A3B8]">Log in to continue your flow.</p>
             </div>
 
-            {/* Password Field */}
-            <div className="relative group">
-              <input 
-                type="password" 
-                id="password"
-                name="password" 
-                required 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                className="w-full py-3 lg:py-4 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
-                placeholder="Password" 
-              />
-              <label 
-                htmlFor="password" 
-                className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 lg:peer-placeholder-shown:top-4 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm"
-              >
-                Password
-              </label>
-            </div>
-            
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <p className="text-red-400 text-sm text-center">{error}</p>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
+              <div className="relative group">
+                <input 
+                  type="email" 
+                  id="email" 
+                  name="email"
+                  required 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  className="w-full py-3 lg:py-4 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
+                  placeholder=" " /* SPACE IS IMPORTANT FOR CSS PEER DETECTION */
+                />
+                <label 
+                  htmlFor="email" 
+                  className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 lg:peer-placeholder-shown:top-4 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm z-10 pointer-events-none"
+                >
+                  Email Address
+                </label>
               </div>
-            )}
 
-            <button 
-              type="submit" 
-              className="w-full py-3.5 lg:py-4 mt-6 bg-[#7F5AF0] hover:bg-[#6f4df7] text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-[#7F5AF0]/40 transition-all transform hover:-translate-y-1 active:scale-95"
-            >
-              Login
-            </button>
+              <div className="relative group">
+                <input 
+                  type="password" 
+                  id="password"
+                  name="password" 
+                  required 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  className="w-full py-3 lg:py-4 bg-transparent border-b-2 border-[#2D3748] text-white text-base outline-none focus:border-[#7F5AF0] transition-colors placeholder-transparent peer" 
+                  placeholder=" " /* SPACE IS IMPORTANT FOR CSS PEER DETECTION */
+                />
+                <label 
+                  htmlFor="password" 
+                  className="absolute left-0 -top-3.5 text-[#94A3B8] text-xs lg:text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-[#94A3B8] peer-placeholder-shown:top-3 lg:peer-placeholder-shown:top-4 peer-focus:-top-3.5 peer-focus:text-[#7F5AF0] peer-focus:text-xs lg:peer-focus:text-sm z-10 pointer-events-none"
+                >
+                  Password
+                </label>
+              </div>
+              
+              {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-red-400 text-sm text-center">{error}</p>
+                </div>
+              )}
 
-            <p className="text-center text-[#94A3B8] text-sm mt-6">
-              Don't have an account? <Link to="/register" className="text-[#00E0C7] font-medium hover:text-[#33ffea] transition-colors ml-1">Sign Up</Link>
-            </p>
-          </form>
+              <button 
+                type="submit" 
+                className="w-full py-3.5 lg:py-4 mt-6 bg-[#7F5AF0] hover:bg-[#6f4df7] text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-[#7F5AF0]/40 transition-all transform hover:-translate-y-1 active:scale-95"
+              >
+                Login
+              </button>
+
+              <p className="text-center text-[#94A3B8] text-sm mt-6">
+                Don't have an account? <Link to="/register" className="text-[#00E0C7] font-medium hover:text-[#33ffea] transition-colors ml-1">Sign Up</Link>
+              </p>
+            </form>
+          </div>
         </div>
       </div>
     </div>
