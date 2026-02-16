@@ -21,34 +21,31 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // --- 1. INDUSTRY STANDARD KEEP-ALIVE (Prevents Cold Starts) ---
-// This is the critical fix for "Slow Login". 
-// You MUST configure a Cron Job (or GitHub Action) to ping this URL every 10 minutes.
-// URL to ping: https://your-backend-app.onrender.com/health
+// Ping this URL every 10 mins using a Cron Job (e.g., cron-job.org)
 app.get('/health', (req, res) => {
     res.status(200).send('Server is awake and healthy');
 });
 
 // --- 2. ROOT ROUTE (Sanity Check) ---
-// This ensures that when you visit the main domain, you see something.
 app.get('/', (req, res) => {
     res.send('QueryStream API is running...');
 });
 
-// --- MIDDLEWARE ---
+// --- MIDDLEWARE (CORS FIXED) ---
 app.use(cors({
   origin: [
-    "http://localhost:5173",                  // Local Development
-    "https://query-stream.netlify.app"        // ✅ YOUR DEPLOYED FRONTEND
+    "http://localhost:5173",                                          // Local Development
+    "https://query-stream.netlify.app",                               // Main Production URL
+    "https://699338f5a44cef1e92670e1d--query-stream.netlify.app"      // 🔧 FIX: Your specific Netlify Preview URL
   ],
-  credentials: true // Allows cookies/tokens to be sent if needed
+  credentials: true // Allows cookies/tokens to be sent
 }));
 
 app.use(express.json());
 app.use(cookieParser()); 
 
 // --- STATIC FILES ---
-// NOTE: On Render (Free Tier), files uploaded here will disappear when the server restarts.
-// For a permanent Industry Solution, you would eventually move to AWS S3 or Cloudinary.
+// NOTE: On Render (Free Tier), files uploaded here will disappear on restart.
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // --- ROUTES ---
