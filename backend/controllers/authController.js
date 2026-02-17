@@ -1,10 +1,9 @@
-import User from '../models/user.js'; // ⚠️ Make sure this filename matches exactly (User.js vs user.js)
+// backend/controllers/authController.js
+import User from '../models/UserModel.js'; // ✅ CHANGED to match new filename
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-// @desc    Auth user & get token
-// @route   POST /api/auth/login
-// @access  Public
+// --- LOGIN ---
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -14,28 +13,37 @@ export const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Please provide an email and password' });
         }
 
-        // 2. Check Config (Prevents 500 Crash on Render)
+        // 2. Check Config
         if (!process.env.JWT_SECRET) {
-            console.error("FATAL ERROR: JWT_SECRET is missing in environment variables.");
+            console.error("FATAL: JWT_SECRET is missing.");
             return res.status(500).json({ message: 'Server Configuration Error' });
         }
 
-        // 3. Find User
-        // We select +password just in case your model has { select: false }
+        // 3. Find User & Get Password
+        console.log(`[LOGIN] Attempting login for: ${email}`); // DEBUG LOG
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
+            console.log(`[LOGIN] User not found: ${email}`);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // 4. Manual Password Compare (Safer than model method)
+        // 4. CRASH PROTECTION (Fixes "Illegal arguments" error)
+        if (!user.password) {
+            console.error(`[CRITICAL] User ${email} exists but has NO password. Deleting corrupted account.`);
+            await User.deleteOne({ _id: user._id });
+            return res.status(400).json({ message: 'Account corrupted. Please Register again.' });
+        }
+
+        // 5. Check Password
         const isMatch = await bcrypt.compare(password, user.password);
-
         if (!isMatch) {
+            console.log(`[LOGIN] Password mismatch for: ${email}`);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // 5. Success
+        // 6. Success
+        console.log(`[LOGIN] Success for: ${email}`);
         res.json({
             _id: user._id,
             name: user.name,
@@ -44,14 +52,12 @@ export const loginUser = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Login Error:", error.message);
+        console.error("Login Error:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
+// --- REGISTER ---
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -60,18 +66,15 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'Please add all fields' });
         }
 
-        // Check if user exists
         const userExists = await User.findOne({ email });
-
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Manual Hashing (Safer/Clearer than pre-save hooks)
+        // Manual Hashing
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create user
         const user = await User.create({
             name,
             email,
@@ -90,14 +93,11 @@ export const registerUser = async (req, res) => {
         }
 
     } catch (error) {
-        console.error("Register Error:", error.message);
+        console.error("Register Error:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
-// Helper function to generate JWT
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
-    });
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };

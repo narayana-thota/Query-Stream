@@ -20,32 +20,30 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// --- 1. INDUSTRY STANDARD KEEP-ALIVE (Prevents Cold Starts) ---
-// Ping this URL every 10 mins using a Cron Job (e.g., cron-job.org)
+// --- 1. HEALTH CHECK ---
 app.get('/health', (req, res) => {
     res.status(200).send('Server is awake and healthy');
 });
 
-// --- 2. ROOT ROUTE (Sanity Check) ---
+// --- 2. ROOT ROUTE ---
 app.get('/', (req, res) => {
     res.send('QueryStream API is running...');
 });
 
-// --- MIDDLEWARE (CORS FIXED) ---
+// --- MIDDLEWARE ---
 app.use(cors({
   origin: [
-    "http://localhost:5173",                                          // Local Development
-    "https://query-stream.netlify.app",                               // Main Production URL
-    "https://699338f5a44cef1e92670e1d--query-stream.netlify.app"      // 🔧 FIX: Your specific Netlify Preview URL
+    "http://localhost:5173",                  // Local Development
+    "https://query-stream.netlify.app",       // Production Frontend
+    "https://699338f5a44cef1e92670e1d--query-stream.netlify.app" // Your specific Netlify preview link
   ],
-  credentials: true // Allows cookies/tokens to be sent
+  credentials: true 
 }));
 
 app.use(express.json());
 app.use(cookieParser()); 
 
 // --- STATIC FILES ---
-// NOTE: On Render (Free Tier), files uploaded here will disappear on restart.
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // --- ROUTES ---
