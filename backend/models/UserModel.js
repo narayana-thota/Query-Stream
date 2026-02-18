@@ -20,8 +20,8 @@ const UserSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, 'Please add a password'],
-        minlength: 6
-        // ⚠️ REMOVED "select: false" to guarantee the controller can see it.
+        minlength: 6,
+        select: false // Security: Hide password by default
     },
     date: {
         type: Date,

@@ -1,4 +1,3 @@
-// frontend/src/pages/Dashboard.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
@@ -12,12 +11,10 @@ import {
 const Dashboard = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   
-  // --- STATE (Initialized with Default/Empty values for "Instant Shell") ---
+  // --- STATE ---
   const [todos, setTodos] = useState([]);
   const [newTask, setNewTask] = useState('');
   const [priority, setPriority] = useState('Medium'); 
-  // NOTE: We keep 'loading' state, but we WON'T use it to block the UI.
-  // We only use it if we want to show a tiny spinner somewhere specific.
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState({ name: 'User', email: 'user@example.com', initials: 'U' });
   const [greeting, setGreeting] = useState('Good Morning');
@@ -114,10 +111,13 @@ const Dashboard = ({ toggleSidebar }) => {
         const storedName = localStorage.getItem('userName');
         const storedEmail = localStorage.getItem('userEmail');
         
+        // Clean name logic same as ToDo List
+        let displayName = storedName ? storedName.replace(/[0-9]/g, '') : 'User';
+        
         setUser({
-          name: storedName || 'User',
+          name: displayName,
           email: storedEmail || 'user@example.com',
-          initials: getInitials(storedName || 'User')
+          initials: getInitials(displayName)
         });
 
         const [todoRes, pdfRes, podcastRes] = await Promise.allSettled([
@@ -404,36 +404,41 @@ const Dashboard = ({ toggleSidebar }) => {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* HEADER: Fixed (Sticky) */}
-      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17]/95 backdrop-blur-md flex-shrink-0 border-b border-gray-800 z-50">
-        <div className="flex items-center gap-3">
-             <button className="md:hidden text-[#94A3B8] hover:text-white p-1" onClick={toggleSidebar}><Menu size={24} /></button>
-             {/* HEADER ICON ADDED */}
-             <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-[#7F5AF0]/10 flex items-center justify-center border border-[#7F5AF0]/20 shadow-lg shadow-[#7F5AF0]/5">
-                <LayoutGrid size={20} className="text-[#7F5AF0] md:w-6 md:h-6" />
-             </div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">Dashboard</h1>
-        </div>
-        <div className="flex items-center gap-4 md:gap-6 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-end">
-              <span className="text-sm font-bold text-white leading-none truncate max-w-[100px] md:max-w-none">{user.name.replace(/[0-9]/g, '')}</span>
-              <span className="text-[11px] text-[#94A3B8] font-medium mt-1 hidden sm:block">{user.email}</span>
+      {/* HEADER: UPDATED TO MATCH TO-DO LIST STYLE */}
+      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] flex-shrink-0 border-b border-gray-800 z-50">
+        {/* LEFT SIDE: Menu + Logo + Title */}
+        <div className="flex items-center gap-3 md:gap-4">
+            <button className="md:hidden text-[#94A3B8] hover:text-white p-1" onClick={toggleSidebar}>
+                <Menu size={24} />
+            </button>
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#7F5AF0]/10 flex items-center justify-center border border-[#7F5AF0]/20 shadow-lg shadow-[#7F5AF0]/5">
+                <LayoutGrid size={22} className="text-[#7F5AF0] md:w-[26px] md:h-[26px]" />
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-sm font-bold text-white shadow-lg shrink-0">{user.initials}</div>
-          </div>
+            <h1 className="text-xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">Dashboard</h1>
+        </div>
+
+        {/* RIGHT SIDE: Profile with Vertical Separator */}
+        <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 pl-3 md:pl-6 border-l border-gray-800">
+                <div className="text-right">
+                    <p className="text-xs md:text-sm font-bold text-white leading-tight truncate max-w-[80px] md:max-w-none">{user.name}</p>
+                    <p className="text-[10px] md:text-xs text-gray-500 hidden sm:block">{user.email}</p>
+                </div>
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-white text-xs md:text-sm font-bold shadow-lg ring-2 ring-[#0A0D17]">
+                    {user.initials}
+                </div>
+            </div>
         </div>
       </header>
 
-      {/* SCROLLABLE CONTENT AREA - NO BLOCKING LOADER */}
+      {/* SCROLLABLE CONTENT AREA */}
       <div className="flex-1 overflow-y-auto no-scrollbar relative z-10">
         <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8 pb-6 md:pb-8">
             <section className="relative w-full rounded-2xl overflow-hidden p-5 md:p-8 shadow-2xl shadow-[#7F5AF0]/10 border border-white/5">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#7F5AF0] to-[#00E0C7] opacity-10"></div>
-                {/* Kept static glow here (Visual interest for header card only) */}
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#7F5AF0] rounded-full filter blur-[80px] opacity-20 group-hover:opacity-30 transition-opacity duration-700"></div>
                 <div className="relative z-10">
-                <h2 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">{greeting}, {user.name.replace(/[0-9]/g, '').split(' ')[0]}! 👋</h2>
+                <h2 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">{greeting}, {user.name.split(' ')[0]}! 👋</h2>
                 <p className="text-[#94A3B8] text-xs md:text-lg">Ready to boost your productivity? You have <span className="text-[#00E0C7] font-bold">{stats.pendingTasks} pending tasks</span> today.</p>
                 </div>
             </section>

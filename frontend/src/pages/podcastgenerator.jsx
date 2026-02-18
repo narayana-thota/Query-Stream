@@ -282,15 +282,17 @@ const PodcastGenPage = ({ toggleSidebar }) => {
   return (
     <div className="h-screen w-full bg-[#0A0D17] text-[#F9FAFB] font-sans selection:bg-[#7F5AF0]/30 flex flex-col overflow-hidden">
       
-      {/* HEADER */}
+      {/* HEADER: UPDATED TO MATCH TO-DO LIST STYLE */}
       <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 bg-[#0A0D17] flex-shrink-0 z-10 border-b border-gray-800">
-        <div className="flex items-center gap-4">
+        
+        {/* LEFT SIDE: Menu + Logo + Title */}
+        <div className="flex items-center gap-3 md:gap-4">
           <button className="md:hidden text-[#94A3B8] hover:text-white p-1" onClick={toggleSidebar}>
             <Menu size={24} />
           </button>
           
-          <div className="w-12 h-12 rounded-xl bg-[#7F5AF0]/10 flex items-center justify-center border border-[#7F5AF0]/20 shadow-lg shadow-[#7F5AF0]/5">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#7F5AF0]/10 flex items-center justify-center border border-[#7F5AF0]/20 shadow-lg shadow-[#7F5AF0]/5">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="md:w-[26px] md:h-[26px]">
                   <rect x="3" y="10" width="2" height="4" rx="1" fill="#7F5AF0" fillOpacity="0.5"/>
                   <rect x="7" y="6" width="2" height="12" rx="1" fill="#7F5AF0" fillOpacity="0.8"/>
                   <rect x="11" y="3" width="2" height="18" rx="1" fill="#7F5AF0"/>
@@ -299,18 +301,19 @@ const PodcastGenPage = ({ toggleSidebar }) => {
               </svg>
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">
+          <h1 className="text-xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#94A3B8]">
             Podcast Generator
           </h1>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-end">
-              <span className="text-sm font-bold text-white leading-none truncate max-w-[100px] md:max-w-none">{user.name}</span>
-              <span className="text-[10px] text-[#94A3B8] font-medium mt-1 max-w-[150px] truncate hidden sm:block">{user.email}</span>
+        {/* RIGHT SIDE: Profile with Vertical Separator */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 pl-3 md:pl-6 border-l border-gray-800">
+            <div className="text-right">
+              <span className="text-xs md:text-sm font-bold text-white leading-tight truncate max-w-[80px] md:max-w-none block">{user.name}</span>
+              <span className="text-[10px] md:text-xs text-gray-500 font-medium mt-0.5 max-w-[150px] truncate hidden sm:block">{user.email}</span>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-lg font-bold text-white shadow-lg border border-white/10">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-[#7F5AF0] to-[#00E0C7] flex items-center justify-center text-xs md:text-sm font-bold text-white shadow-lg ring-2 ring-[#0A0D17]">
               {user.initials}
             </div>
           </div>
