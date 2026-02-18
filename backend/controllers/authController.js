@@ -1,5 +1,4 @@
-// backend/controllers/authController.js
-import User from '../models/UserModel.js'; // ✅ CHANGED to match new filename
+import User from '../models/UserModel.js'; 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -8,46 +7,42 @@ export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // 1. Validation
+        // 1. Log the attempt (To verify new code is running)
+        console.log(`[LOGIN ATTEMPT] Email: ${email}`);
+
+        // 2. Validate
         if (!email || !password) {
-            return res.status(400).json({ message: 'Please provide an email and password' });
+            return res.status(400).json({ message: 'Please provide email and password' });
         }
 
-        // 2. Check Config
-        if (!process.env.JWT_SECRET) {
-            console.error("FATAL: JWT_SECRET is missing.");
-            return res.status(500).json({ message: 'Server Configuration Error' });
-        }
-
-        // 3. Find User & Get Password
-        console.log(`[LOGIN] Attempting login for: ${email}`); // DEBUG LOG
-        const user = await User.findOne({ email }).select('+password');
+        // 3. Find User (Password is now included by default)
+        const user = await User.findOne({ email });
 
         if (!user) {
-            console.log(`[LOGIN] User not found: ${email}`);
+            console.log("[LOGIN FAIL] User not found");
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // 4. CRASH PROTECTION (Fixes "Illegal arguments" error)
+        // 4. Debugging Check (This will show in Render logs)
         if (!user.password) {
-            console.error(`[CRITICAL] User ${email} exists but has NO password. Deleting corrupted account.`);
-            await User.deleteOne({ _id: user._id });
-            return res.status(400).json({ message: 'Account corrupted. Please Register again.' });
+            console.error("[CRITICAL] User exists but password is missing!");
+            return res.status(500).json({ message: 'Account corrupted. Register again.' });
         }
 
-        // 5. Check Password
+        // 5. Compare Password
         const isMatch = await bcrypt.compare(password, user.password);
+
         if (!isMatch) {
-            console.log(`[LOGIN] Password mismatch for: ${email}`);
+            console.log("[LOGIN FAIL] Wrong password");
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // 6. Success
-        console.log(`[LOGIN] Success for: ${email}`);
+        // 6. Success - REMOVE password before sending response
+        const userResponse = user.toObject();
+        delete userResponse.password;
+
         res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
+            ...userResponse,
             token: generateToken(user._id)
         });
 
@@ -82,10 +77,12 @@ export const registerUser = async (req, res) => {
         });
 
         if (user) {
+            // Remove password before sending
+            const userResponse = user.toObject();
+            delete userResponse.password;
+
             res.status(201).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
+                ...userResponse,
                 token: generateToken(user._id)
             });
         } else {
@@ -93,11 +90,17 @@ export const registerUser = async (req, res) => {
         }
 
     } catch (error) {
-        console.error("Register Error:", error);
+        console.error("Register Error:", error.message);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    // Safety check for JWT_SECRET
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        console.error("FATAL: JWT_SECRET is missing");
+        return null;
+    }
+    return jwt.sign({ id }, secret, { expiresIn: '30d' });
 };

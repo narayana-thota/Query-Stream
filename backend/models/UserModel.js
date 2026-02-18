@@ -1,4 +1,3 @@
-// backend/models/UserModel.js
 import mongoose from 'mongoose';
 
 const UserSchema = new mongoose.Schema({
@@ -21,8 +20,8 @@ const UserSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, 'Please add a password'],
-        minlength: 6,
-        select: false // Hides password by default
+        minlength: 6
+        // ⚠️ REMOVED "select: false" to guarantee the controller can see it.
     },
     date: {
         type: Date,
