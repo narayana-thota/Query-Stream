@@ -20,21 +20,11 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// --- 1. HEALTH CHECK ---
-app.get('/health', (req, res) => {
-    res.status(200).send('Server is awake and healthy');
-});
-
-// --- 2. ROOT ROUTE ---
-app.get('/', (req, res) => {
-    res.send('QueryStream API is running...');
-});
-
-// --- MIDDLEWARE ---
+// --- 1. MIDDLEWARE (MUST BE AT THE VERY TOP) ---
 app.use(cors({
   origin: [
     "http://localhost:5173",                  // Local Development
-    "https://querystream-sigma.vercel.app/"// Your specific vercel preview link
+    "https://querystream-sigma.vercel.app"    // 👈 FIXED: Removed the trailing slash!
   ],
   credentials: true 
 }));
@@ -42,10 +32,19 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser()); 
 
-// --- STATIC FILES ---
+// --- 2. HEALTH CHECK & ROOT ---
+app.get('/health', (req, res) => {
+    res.status(200).send('Server is awake and healthy');
+});
+
+app.get('/', (req, res) => {
+    res.send('QueryStream API is running...');
+});
+
+// --- 3. STATIC FILES ---
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-// --- ROUTES ---
+// --- 4. ROUTES ---
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes); 
 app.use('/api/pdf', pdfRoutes); 
@@ -53,9 +52,10 @@ app.use('/api/podcast', podcastRoutes);
 
 const PORT = process.env.PORT || 5000;
 
+// --- 5. DATABASE & SERVER ---
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
-  console.log('MongoDB connected!'); 
-  app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
+  console.log('✅ MongoDB connected!'); 
+  app.listen(PORT, () => console.log(`🚀 Server running on port: ${PORT}`));
 })
-.catch((error) => console.error(error.message));
+.catch((error) => console.error('❌ Database connection error:', error.message));
