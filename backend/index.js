@@ -34,8 +34,7 @@ app.get('/', (req, res) => {
 app.use(cors({
   origin: [
     "http://localhost:5173",                  // Local Development
-    "https://query-stream.netlify.app",       // Production Frontend
-    "https://querystream-sigma.vercel.app/" // Your specific Netlify preview link
+    "https://querystream-sigma.vercel.app/"// Your specific vercel preview link
   ],
   credentials: true 
 }));
