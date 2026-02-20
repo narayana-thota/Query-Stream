@@ -7,7 +7,7 @@
   </p>
 
   <p>
-    <a href="https://query-stream.netlify.app"><strong>View Live Deployment »</strong></a>
+    <a href="https://querystream-sigma.vercel.app"><strong>View Live Deployment »</strong></a>
   </p>
 
   <br />
